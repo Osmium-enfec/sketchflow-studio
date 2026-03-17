@@ -5,6 +5,7 @@ import BoxComponent from './canvas/BoxComponent';
 import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
+import DeviceComponent from './canvas/DeviceComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
