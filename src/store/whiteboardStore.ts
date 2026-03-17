@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox';
+export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox';
 
 export interface WhiteboardComponent {
   id: string;
