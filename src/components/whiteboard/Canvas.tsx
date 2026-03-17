@@ -75,7 +75,7 @@ const Canvas: React.FC = () => {
       const scaleX = rect.width / CANVAS_W;
       const scaleY = rect.height / CANVAS_H;
       
-      if (comp.type === 'box' || comp.type === 'foldedBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox') {
         setEditPos({
           x: comp.props.x * scaleX + rect.left,
           y: comp.props.y * scaleY + rect.top,
