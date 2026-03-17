@@ -4,6 +4,7 @@ import TitleComponent from './canvas/TitleComponent';
 import BoxComponent from './canvas/BoxComponent';
 import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
+import CharacterComponent from './canvas/CharacterComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -319,6 +320,16 @@ const Canvas: React.FC = () => {
                     isSelected={selectedId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
+              if (comp.type === 'character') {
+                return (
+                  <CharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                   />
                 );
               }

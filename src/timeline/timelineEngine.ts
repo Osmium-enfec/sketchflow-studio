@@ -6,6 +6,7 @@ const DURATION: Record<string, number> = {
   box: 1.5,
   arrow: 0.8,
   highlight: 0.6,
+  character: 3.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -105,11 +106,34 @@ function animateHighlight(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateCharacter(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const paths = el.querySelectorAll('.character-stroke');
+
+  paths.forEach((pathEl, i) => {
+    const path = pathEl as SVGPathElement;
+    const length = path.getTotalLength();
+    gsap.set(path, {
+      strokeDasharray: length,
+      strokeDashoffset: length,
+      opacity: 1,
+    });
+    tl.to(path, {
+      strokeDashoffset: 0,
+      duration: 0.15 + length / 600,
+      ease: 'power1.inOut',
+    }, i === 0 ? 0 : '>-0.05');
+  });
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
   arrow: animateArrow,
   highlight: animateHighlight,
+  character: animateCharacter,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {

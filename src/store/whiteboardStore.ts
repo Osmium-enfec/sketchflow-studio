@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight';
+export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character';
 
 export interface WhiteboardComponent {
   id: string;
@@ -33,6 +33,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   box: (n) => ({ text: 'Box ' + n, x: 300, y: 200 + n * 40, width: 200, height: 120 }),
   arrow: (n) => ({ startX: 200, startY: 300 + n * 30, endX: 500, endY: 300 + n * 30 }),
   highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250, height: 18, color: 'hsl(48 100% 67%)' }),
+  character: (n) => ({ x: 600 + n * 30, y: 300, scale: 1 }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
