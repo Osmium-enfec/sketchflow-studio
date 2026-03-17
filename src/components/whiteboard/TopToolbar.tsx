@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smartphone, ArrowDown, CornerDownRight, FileText } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -51,6 +51,10 @@ const TopToolbar: React.FC = () => {
               <button onClick={() => { addComponent('foldedBox'); setBoxesOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <FileText className="h-4 w-4 text-muted-foreground" /> Folded Box
+              </button>
+              <button onClick={() => { addComponent('codeBox'); setBoxesOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Monitor className="h-4 w-4 text-muted-foreground" /> Code Box
               </button>
             </div>
           )}

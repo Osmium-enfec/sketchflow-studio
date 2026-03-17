@@ -9,6 +9,7 @@ import DeviceComponent from './canvas/DeviceComponent';
 import GradientArrowComponent from './canvas/GradientArrowComponent';
 import CurvedArrowComponent from './canvas/CurvedArrowComponent';
 import FoldedBoxComponent from './canvas/FoldedBoxComponent';
+import CodeBoxComponent from './canvas/CodeBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -65,7 +66,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox')) return;
       setEditingId(id);
       setEditText(comp.props.text || '');
       
@@ -74,7 +75,7 @@ const Canvas: React.FC = () => {
       const scaleX = rect.width / CANVAS_W;
       const scaleY = rect.height / CANVAS_H;
       
-      if (comp.type === 'box' || comp.type === 'foldedBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox') {
         setEditPos({
           x: comp.props.x * scaleX + rect.left,
           y: comp.props.y * scaleY + rect.top,
@@ -141,7 +142,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -378,6 +379,17 @@ const Canvas: React.FC = () => {
                     isEditing={editingId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                     onDoubleClick={(e) => handleDoubleClick(e, comp.id)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
+              if (comp.type === 'codeBox') {
+                return (
+                  <CodeBoxComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
