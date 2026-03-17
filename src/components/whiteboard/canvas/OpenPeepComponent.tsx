@@ -75,6 +75,10 @@ export const PEEP_PRESETS: Record<string, {
     Face: CalmFace,
     Beard: FullBeard,
   },
+  buttonShirt: {
+    label: 'Button Shirt',
+    CustomComponent: ButtonShirtSmilingPeep,
+  },
 };
 
 interface Props {
