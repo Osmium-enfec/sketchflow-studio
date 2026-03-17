@@ -129,12 +129,43 @@ function animateCharacter(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateDevice(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const screen = el.querySelector('.device-screen');
+  const strokes = el.querySelectorAll('.device-stroke');
+
+  // Hide screen initially
+  if (screen) {
+    gsap.set(screen, { opacity: 0 });
+  }
+
+  // Draw strokes one by one
+  strokes.forEach((pathEl, i) => {
+    const path = pathEl as SVGPathElement;
+    const length = path.getTotalLength();
+    gsap.set(path, { strokeDasharray: length, strokeDashoffset: length, opacity: 1 });
+    tl.to(path, {
+      strokeDashoffset: 0,
+      duration: 0.2 + length / 800,
+      ease: 'power1.inOut',
+    }, i === 0 ? 0 : '>-0.05');
+  });
+
+  // Fade in screen after outline is drawn
+  if (screen) {
+    tl.to(screen, { opacity: 1, duration: 0.4, ease: 'power2.out' }, '>-0.1');
+  }
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
   arrow: animateArrow,
   highlight: animateHighlight,
   character: animateCharacter,
+  device: animateDevice,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
