@@ -14,6 +14,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   curvedArrow: CornerDownRight,
   foldedBox: FileText,
   codeBox: Monitor,
+  openPeep: PersonStanding,
 };
 
 const labelMap: Record<ComponentType, string> = {
