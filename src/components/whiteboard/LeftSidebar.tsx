@@ -29,6 +29,7 @@ const labelMap: Record<ComponentType, string> = {
   curvedArrow: 'Curved Arrow',
   foldedBox: 'Folded Box',
   codeBox: 'Code Box',
+  openPeep: 'Open Peep',
 };
 
 const LeftSidebar: React.FC = () => {
