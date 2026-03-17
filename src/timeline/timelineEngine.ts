@@ -273,7 +273,7 @@ function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
   });
 
   // Animate body paths first, then head/hair, then face
-  const groups = ['.peep-body', '.peep-hair', '.peep-head > .peep-face', '.peep-beard', '.peep-accessory'];
+  const groups = ['.peep-body', '.peep-hair', '.peep-face', '.peep-beard', '.peep-accessory'];
   let groupDelay = 0;
 
   groups.forEach((selector) => {
