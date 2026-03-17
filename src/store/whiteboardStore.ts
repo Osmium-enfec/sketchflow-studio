@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox';
+export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox';
 
 export interface WhiteboardComponent {
   id: string;
@@ -34,6 +34,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   arrow: (n) => ({ startX: 200, startY: 300 + n * 30, endX: 500, endY: 300 + n * 30 }),
   highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250, height: 18, color: 'hsl(48 100% 67%)' }),
   character: (n) => ({ x: 600 + n * 30, y: 300, scale: 1 }),
+  indianCharacter: (n) => ({ x: 650 + n * 30, y: 250, scale: 1 }),
   device: (n) => ({ x: 700 + n * 30, y: 200, scale: 1, variant: 'phone' }),
   gradientArrow: (n) => ({ startX: 400, startY: 150, endX: 400, endY: 550 }),
   curvedArrow: (n) => ({ startX: 300, startY: 200, endX: 400, endY: 280 }),

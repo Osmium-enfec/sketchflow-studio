@@ -5,6 +5,7 @@ import BoxComponent from './canvas/BoxComponent';
 import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
+import IndianCharacterComponent from './canvas/IndianCharacterComponent';
 import DeviceComponent from './canvas/DeviceComponent';
 import GradientArrowComponent from './canvas/GradientArrowComponent';
 import CurvedArrowComponent from './canvas/CurvedArrowComponent';
@@ -340,6 +341,16 @@ const Canvas: React.FC = () => {
               if (comp.type === 'character') {
                 return (
                   <CharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
+              if (comp.type === 'indianCharacter') {
+                return (
+                  <IndianCharacterComponent
                     key={comp.id}
                     component={comp}
                     isSelected={selectedId === comp.id}

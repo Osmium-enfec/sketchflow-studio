@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -8,15 +8,18 @@ const TopToolbar: React.FC = () => {
   const [androidOpen, setAndroidOpen] = useState(false);
   const [arrowsOpen, setArrowsOpen] = useState(false);
   const [boxesOpen, setBoxesOpen] = useState(false);
+  const [charsOpen, setCharsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);
+  const charsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAndroidOpen(false);
       if (arrowsRef.current && !arrowsRef.current.contains(e.target as Node)) setArrowsOpen(false);
       if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
+      if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -86,9 +89,25 @@ const TopToolbar: React.FC = () => {
         <Button variant="ghost" size="sm" onClick={() => addComponent('highlight')} className="gap-1.5">
           <Highlighter className="h-4 w-4" /> Highlight
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => addComponent('character')} className="gap-1.5">
-          <User className="h-4 w-4" /> Character
-        </Button>
+
+        {/* Characters dropdown */}
+        <div className="relative" ref={charsRef}>
+          <Button variant="ghost" size="sm" onClick={() => { setCharsOpen(!charsOpen); setArrowsOpen(false); setBoxesOpen(false); setAndroidOpen(false); }} className="gap-1.5">
+            <User className="h-4 w-4" /> Character <ChevronIcon open={charsOpen} />
+          </Button>
+          {charsOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+              <button onClick={() => { addComponent('character'); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <User className="h-4 w-4 text-muted-foreground" /> Doodle Character
+              </button>
+              <button onClick={() => { addComponent('indianCharacter'); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Smile className="h-4 w-4 text-muted-foreground" /> Indian Face
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Android dropdown */}
         <div className="relative" ref={dropdownRef}>
