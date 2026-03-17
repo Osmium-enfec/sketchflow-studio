@@ -19,6 +19,7 @@ const TopToolbar: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAndroidOpen(false);
       if (arrowsRef.current && !arrowsRef.current.contains(e.target as Node)) setArrowsOpen(false);
       if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
+      if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
