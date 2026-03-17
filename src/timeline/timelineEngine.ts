@@ -13,7 +13,7 @@ const DURATION: Record<string, number> = {
   curvedArrow: 0.8,
   foldedBox: 1.5,
   codeBox: 1.2,
-  openPeep: 1.0,
+  openPeep: 3.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
