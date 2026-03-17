@@ -23,15 +23,17 @@ import AweFace from '@opeepsfun/open-peeps/build/face/Awe';
 
 import GlassesAccessory from '@opeepsfun/open-peeps/build/accessory/Glasses';
 import FullBeard from '@opeepsfun/open-peeps/build/beard/Full';
+import ButtonShirtSmilingPeep from './peeps/ButtonShirtSmilingPeep';
 
 export const PEEP_PRESETS: Record<string, {
   label: string;
-  Body: React.FC<any>;
-  Head: React.FC<any>;
-  Face: React.FC<any>;
+  Body?: React.FC<any>;
+  Head?: React.FC<any>;
+  Face?: React.FC<any>;
   Beard?: React.FC<any>;
   Accessory?: React.FC<any>;
   headOffset?: string;
+  CustomComponent?: React.FC;
 }> = {
   explaining: {
     label: 'Explaining',
