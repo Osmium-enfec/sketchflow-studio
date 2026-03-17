@@ -19,7 +19,13 @@ const componentRenderers: Record<string, React.FC<any>> = {
 const Canvas: React.FC = () => {
   const { components, selectedId, selectComponent, updateComponentProps } = useWhiteboardStore();
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const [zoom, setZoom] = React.useState(1);
+
+  const zoomIn = () => setZoom((z) => Math.min(z + 0.15, 3));
+  const zoomOut = () => setZoom((z) => Math.max(z - 0.15, 0.3));
+  const zoomReset = () => setZoom(1);
 
   const getSVGPoint = useCallback((e: React.MouseEvent) => {
     const svg = svgRef.current!;
@@ -86,38 +92,54 @@ const Canvas: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-muted/30">
-      <div className="shadow-lg rounded-xl overflow-hidden border" style={{ maxWidth: '100%', aspectRatio: '16/9' }}>
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
-          className="w-full h-full canvas-bg"
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={() => selectComponent(null)}
-        >
-          {/* Grid dots */}
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <circle cx="1" cy="1" r="1" fill="hsl(0 0% 85%)" />
-            </pattern>
-          </defs>
-          <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+    <div className="flex-1 relative overflow-hidden bg-muted/30">
+      {/* Zoom controls */}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-card border rounded-lg shadow-sm p-1">
+        <button onClick={zoomOut} className="px-2 py-1 text-sm font-medium hover:bg-muted rounded transition-colors">−</button>
+        <button onClick={zoomReset} className="px-2 py-1 text-xs text-muted-foreground hover:bg-muted rounded transition-colors min-w-[3rem] text-center">
+          {Math.round(zoom * 100)}%
+        </button>
+        <button onClick={zoomIn} className="px-2 py-1 text-sm font-medium hover:bg-muted rounded transition-colors">+</button>
+      </div>
 
-          {components.map((comp) => {
-            const Renderer = componentRenderers[comp.type];
-            if (!Renderer) return null;
-            return (
-              <Renderer
-                key={comp.id}
-                component={comp}
-                isSelected={selectedId === comp.id}
-                onMouseDown={(e: React.MouseEvent) => handleMouseDown(e, comp.id, comp.props)}
-              />
-            );
-          })}
-        </svg>
+      <div ref={containerRef} className="w-full h-full overflow-auto flex items-center justify-center p-4">
+        <div
+          className="shadow-lg rounded-xl overflow-hidden border shrink-0"
+          style={{
+            width: `${CANVAS_W * zoom}px`,
+            height: `${CANVAS_H * zoom}px`,
+          }}
+        >
+          <svg
+            ref={svgRef}
+            viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
+            className="w-full h-full canvas-bg"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClick={() => selectComponent(null)}
+          >
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="hsl(0 0% 85%)" />
+              </pattern>
+            </defs>
+            <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+
+            {components.map((comp) => {
+              const Renderer = componentRenderers[comp.type];
+              if (!Renderer) return null;
+              return (
+                <Renderer
+                  key={comp.id}
+                  component={comp}
+                  isSelected={selectedId === comp.id}
+                  onMouseDown={(e: React.MouseEvent) => handleMouseDown(e, comp.id, comp.props)}
+                />
+              );
+            })}
+          </svg>
+        </div>
       </div>
     </div>
   );
