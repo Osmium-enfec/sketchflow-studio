@@ -250,8 +250,66 @@ function animateIndianCharacter(el: SVGGElement): gsap.core.Timeline {
 
 function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
-  gsap.set(el, { opacity: 0, scale: 0.6, transformOrigin: 'center bottom' });
-  tl.to(el, { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.4)' });
+
+  // Collect all paths inside the peep component
+  const allPaths = el.querySelectorAll('path');
+
+  // First pass: set all paths invisible
+  allPaths.forEach((path) => {
+    const pathEl = path as SVGPathElement;
+    try {
+      const length = pathEl.getTotalLength();
+      gsap.set(pathEl, {
+        strokeDasharray: length,
+        strokeDashoffset: length,
+        fillOpacity: 0,
+        stroke: pathEl.getAttribute('fill') || '#000',
+        strokeWidth: 2,
+        opacity: 1,
+      });
+    } catch {
+      gsap.set(pathEl, { opacity: 0 });
+    }
+  });
+
+  // Animate body paths first, then head/hair, then face
+  const groups = ['.peep-body', '.peep-hair', '.peep-head > .peep-face', '.peep-beard', '.peep-accessory'];
+  let groupDelay = 0;
+
+  groups.forEach((selector) => {
+    const group = el.querySelector(selector);
+    if (!group) return;
+    const paths = group.querySelectorAll(':scope > path, :scope > g > path, path');
+    if (paths.length === 0) return;
+
+    const uniquePaths = Array.from(new Set(Array.from(paths)));
+    uniquePaths.forEach((pathNode, i) => {
+      const pathEl = pathNode as SVGPathElement;
+      try {
+        const length = pathEl.getTotalLength();
+        const drawDuration = Math.min(1.5, Math.max(0.3, length / 2000));
+
+        // Stroke draw
+        tl.to(pathEl, {
+          strokeDashoffset: 0,
+          duration: drawDuration,
+          ease: 'power1.inOut',
+        }, groupDelay + i * 0.08);
+
+        // Fill reveal slightly after stroke starts
+        tl.to(pathEl, {
+          fillOpacity: 1,
+          duration: 0.4,
+          ease: 'power2.out',
+        }, groupDelay + i * 0.08 + drawDuration * 0.6);
+      } catch {
+        tl.to(pathEl, { opacity: 1, duration: 0.3 }, groupDelay + i * 0.1);
+      }
+    });
+
+    groupDelay += 0.5;
+  });
+
   return tl;
 }
 

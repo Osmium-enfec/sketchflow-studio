@@ -1,7 +1,7 @@
 import React from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 
-// Direct imports of individual Open Peeps parts (bypasses require()-based Effigy)
+// Direct ESM imports of individual Open Peeps parts
 import ExplainingBody from '@opeepsfun/open-peeps/build/body/effigy/Explaining';
 import CoffeeBody from '@opeepsfun/open-peeps/build/body/effigy/Coffee';
 import PointingUpBody from '@opeepsfun/open-peeps/build/body/effigy/PointingUp';
@@ -24,7 +24,6 @@ import AweFace from '@opeepsfun/open-peeps/build/face/Awe';
 import GlassesAccessory from '@opeepsfun/open-peeps/build/accessory/Glasses';
 import FullBeard from '@opeepsfun/open-peeps/build/beard/Full';
 
-// Preset configurations
 export const PEEP_PRESETS: Record<string, {
   label: string;
   Body: React.FC<any>;
@@ -95,41 +94,35 @@ const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown
       onMouseDown={onMouseDown}
       style={{ cursor: 'grab' }}
     >
-      <foreignObject x={x} y={y} width={width} height={height} overflow="visible">
-        <div style={{ width, height, pointerEvents: 'none' }}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="184.21621621621625 210.7874999999999 940.2702702702704 1130.5875"
-            overflow="visible"
-            width="100%"
-            height="100%"
-          >
-            <g id="Bust">
-              <g id="Body" transform="translate(147, 639) scale(1 1)">
-                <preset.Body />
-              </g>
-              <g id="Head" transform={preset.headOffset || 'translate(0 0)'}>
-                <g id="Hair" transform="translate(342, 190) scale(1 1)">
-                  <preset.Head />
-                </g>
-                <g id="Face" transform="translate(531, 366) scale(1 1)">
-                  <preset.Face />
-                </g>
-                {preset.Beard && (
-                  <g id="Beard" transform="translate(495, 518) scale(1 1)">
-                    <preset.Beard />
-                  </g>
-                )}
-                {preset.Accessory && (
-                  <g id="Accessories" transform="translate(419, 421) scale(1 1)">
-                    <preset.Accessory />
-                  </g>
-                )}
-              </g>
+      {/* Render directly in SVG canvas for GSAP animation access */}
+      <g transform={`translate(${x}, ${y}) scale(${scale})`}>
+        {/* Use the same layout as the original Effigy viewBox */}
+        <g transform="translate(-184, -210)">
+          <g id="Bust">
+            <g className="peep-body" transform="translate(147, 639) scale(1 1)">
+              <preset.Body />
             </g>
-          </svg>
-        </div>
-      </foreignObject>
+            <g className="peep-head" transform={preset.headOffset || 'translate(0 0)'}>
+              <g className="peep-hair" transform="translate(342, 190) scale(1 1)">
+                <preset.Head />
+              </g>
+              <g className="peep-face" transform="translate(531, 366) scale(1 1)">
+                <preset.Face />
+              </g>
+              {preset.Beard && (
+                <g className="peep-beard" transform="translate(495, 518) scale(1 1)">
+                  <preset.Beard />
+                </g>
+              )}
+              {preset.Accessory && (
+                <g className="peep-accessory" transform="translate(419, 421) scale(1 1)">
+                  <preset.Accessory />
+                </g>
+              )}
+            </g>
+          </g>
+        </g>
+      </g>
       {isSelected && (
         <rect
           x={x - 4}
