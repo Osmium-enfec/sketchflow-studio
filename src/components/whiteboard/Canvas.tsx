@@ -19,7 +19,13 @@ const componentRenderers: Record<string, React.FC<any>> = {
 const Canvas: React.FC = () => {
   const { components, selectedId, selectComponent, updateComponentProps } = useWhiteboardStore();
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
+  const [zoom, setZoom] = React.useState(1);
+
+  const zoomIn = () => setZoom((z) => Math.min(z + 0.15, 3));
+  const zoomOut = () => setZoom((z) => Math.max(z - 0.15, 0.3));
+  const zoomReset = () => setZoom(1);
 
   const getSVGPoint = useCallback((e: React.MouseEvent) => {
     const svg = svgRef.current!;
