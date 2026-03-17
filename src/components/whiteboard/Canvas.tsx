@@ -334,6 +334,16 @@ const Canvas: React.FC = () => {
                   />
                 );
               }
+              if (comp.type === 'device') {
+                return (
+                  <DeviceComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
               return null;
             })}
           </svg>
