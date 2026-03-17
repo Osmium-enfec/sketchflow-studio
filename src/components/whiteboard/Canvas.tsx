@@ -219,18 +219,18 @@ const Canvas: React.FC = () => {
         <button onClick={zoomIn} className="px-2 py-1 text-sm font-medium hover:bg-muted rounded transition-colors">+</button>
       </div>
 
-      {/* Highlight color picker when highlight selected */}
-      {selectedComp?.type === 'highlight' && (
+      {/* Color picker for highlight or title */}
+      {selectedComp && (selectedComp.type === 'highlight' || selectedComp.type === 'title') && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
           <span className="text-xs text-muted-foreground font-medium">Color:</span>
-          {HIGHLIGHT_COLORS.map((color) => (
+          {(selectedComp.type === 'title' ? TITLE_COLORS : HIGHLIGHT_COLORS).map((color) => (
             <button
               key={color}
               onClick={() => updateComponentProps(selectedComp.id, { color })}
               className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
               style={{
                 backgroundColor: color,
-                borderColor: selectedComp.props.color === color ? 'hsl(0 0% 7%)' : 'transparent',
+                borderColor: (selectedComp.props.color || (selectedComp.type === 'title' ? TITLE_COLORS[0] : HIGHLIGHT_COLORS[0])) === color ? 'hsl(0 0% 7%)' : 'transparent',
               }}
             />
           ))}
