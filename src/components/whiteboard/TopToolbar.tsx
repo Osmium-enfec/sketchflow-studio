@@ -8,9 +8,11 @@ const TopToolbar: React.FC = () => {
   const [androidOpen, setAndroidOpen] = useState(false);
   const [arrowsOpen, setArrowsOpen] = useState(false);
   const [boxesOpen, setBoxesOpen] = useState(false);
+  const [charsOpen, setCharsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);
+  const charsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
