@@ -7,6 +7,7 @@ const DURATION: Record<string, number> = {
   arrow: 0.8,
   highlight: 0.6,
   character: 3.0,
+  indianCharacter: 1.5,
   device: 2.5,
   gradientArrow: 1.0,
   curvedArrow: 0.8,
