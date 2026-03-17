@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { textToSVGPaths, CharPath } from '@/utils/textToPath';
 
 interface Props {
   component: WhiteboardComponent;
@@ -11,15 +12,24 @@ interface Props {
 
 const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
   const { text, x, y, fontSize = 42 } = component.props;
-  const textRef = useRef<SVGTextElement>(null);
-  const [bbox, setBbox] = React.useState({ width: 0, height: 0 });
+  const [charPaths, setCharPaths] = useState<CharPath[]>([]);
+  const [totalWidth, setTotalWidth] = useState(0);
 
   useEffect(() => {
-    if (textRef.current) {
-      const b = textRef.current.getBBox();
-      setBbox({ width: b.width, height: b.height });
-    }
-  }, [text, fontSize]);
+    let cancelled = false;
+    textToSVGPaths(text || '', x, y, fontSize).then((paths) => {
+      if (cancelled) return;
+      setCharPaths(paths);
+      if (paths.length > 0) {
+        const last = paths[paths.length - 1];
+        setTotalWidth(last.advanceWidth + (parseFloat(last.pathData.split(' ')[1]) || 0) - x + 20);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [text, x, y, fontSize]);
+
+  // Estimate total width from char paths
+  const estimatedWidth = charPaths.length > 0 ? totalWidth : (text?.length || 5) * fontSize * 0.6;
 
   return (
     <g
@@ -31,9 +41,9 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
       {isSelected && (
         <rect
           x={x - 10}
-          y={y - bbox.height - 5}
-          width={bbox.width + 20}
-          height={bbox.height + 15}
+          y={y - fontSize - 5}
+          width={estimatedWidth + 20}
+          height={fontSize + 20}
           fill="none"
           stroke="hsl(210 80% 70%)"
           strokeWidth="2"
@@ -41,34 +51,27 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
           rx="4"
         />
       )}
-      {/* Invisible fill text for interaction */}
-      <text
-        ref={textRef}
-        x={x}
-        y={y}
-        className="title-text"
-        fontFamily="'Patrick Hand', cursive"
-        fontSize={fontSize}
-        fill="hsl(var(--foreground))"
-        stroke="none"
-        style={{ userSelect: 'none' }}
-      >
-        {text}
-      </text>
-      {/* Stroke-only text for handwriting animation */}
-      <text
-        x={x}
-        y={y}
-        className="title-text-stroke"
-        fontFamily="'Patrick Hand', cursive"
-        fontSize={fontSize}
-        fill="none"
-        stroke="hsl(var(--foreground))"
-        strokeWidth="1.5"
-        style={{ userSelect: 'none' }}
-      >
-        {text}
-      </text>
+      {/* Fill paths (visible after animation) */}
+      {charPaths.map((cp) => (
+        <path
+          key={`fill-${cp.index}`}
+          className="title-char-fill"
+          d={cp.pathData}
+          fill="hsl(var(--foreground))"
+          stroke="none"
+        />
+      ))}
+      {/* Stroke paths (for animation tracing) */}
+      {charPaths.map((cp) => (
+        <path
+          key={`stroke-${cp.index}`}
+          className={`title-char title-char-${cp.index}`}
+          d={cp.pathData}
+          fill="none"
+          stroke="hsl(var(--foreground))"
+          strokeWidth="1.5"
+        />
+      ))}
     </g>
   );
 };
