@@ -7,6 +7,7 @@ const DURATION: Record<string, number> = {
   arrow: 0.8,
   highlight: 0.6,
   character: 3.0,
+};
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
   const tl = gsap.timeline();
