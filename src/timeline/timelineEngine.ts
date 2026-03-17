@@ -8,35 +8,42 @@ const DURATION: Record<string, number> = {
   highlight: 0.6,
 };
 
+function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const fullText = textEl.getAttribute('data-full-text') || textEl.textContent || '';
+  const len = fullText.length;
+
+  if (len === 0) return tl;
+
+  const proxy = { chars: 0 };
+  textEl.textContent = '';
+
+  tl.to(proxy, {
+    chars: len,
+    duration,
+    ease: 'steps(' + len + ')',
+    onUpdate: () => {
+      textEl.textContent = fullText.slice(0, Math.round(proxy.chars));
+    },
+    onComplete: () => {
+      textEl.textContent = fullText;
+    },
+  });
+
+  // Add a blinking cursor effect via a temporary tspan
+  tl.set(textEl, {}, '+=0.1');
+
+  return tl;
+}
+
 function animateTitle(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
-  const fillText = el.querySelector('.title-text') as SVGTextElement | null;
-  const strokeText = el.querySelector('.title-text-stroke') as SVGTextElement | null;
+  const textEl = el.querySelector('.title-text') as SVGTextElement | null;
 
-  if (fillText) {
-    gsap.set(fillText, { opacity: 0 });
-  }
-
-  if (strokeText) {
-    // Handwriting stroke animation
-    const length = strokeText.getComputedTextLength?.() || 500;
-    gsap.set(strokeText, {
-      strokeDasharray: length,
-      strokeDashoffset: length,
-      opacity: 1,
-    });
-    tl.to(strokeText, {
-      strokeDashoffset: 0,
-      duration: 1.0,
-      ease: 'power1.inOut',
-    });
-    // Then fade in the fill text and fade out the stroke
-    if (fillText) {
-      tl.to(fillText, { opacity: 1, duration: 0.3, ease: 'power1.out' }, '-=0.2');
-      tl.to(strokeText, { opacity: 0, duration: 0.3, ease: 'power1.out' }, '-=0.2');
-    }
-  } else if (fillText) {
-    tl.fromTo(fillText, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+  if (textEl) {
+    const fullText = textEl.getAttribute('data-full-text') || textEl.textContent || '';
+    const charDuration = Math.max(0.6, Math.min(1.5, fullText.length * 0.06));
+    tl.add(animateTyping(textEl, charDuration));
   }
 
   return tl;
@@ -45,8 +52,9 @@ function animateTitle(el: SVGGElement): gsap.core.Timeline {
 function animateBox(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
   const roughRect = el.querySelector('.rough-rect');
-  const text = el.querySelector('text');
+  const textEl = el.querySelector('text') as SVGTextElement | null;
 
+  // Draw box outline first
   if (roughRect) {
     const paths = roughRect.querySelectorAll('path');
     paths.forEach((path) => {
@@ -56,8 +64,12 @@ function animateBox(el: SVGGElement): gsap.core.Timeline {
     });
   }
 
-  if (text) {
-    tl.fromTo(text, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.5);
+  // Then type in the text
+  if (textEl) {
+    const fullText = textEl.textContent || '';
+    textEl.setAttribute('data-full-text', fullText);
+    const charDuration = Math.max(0.4, Math.min(1.0, fullText.length * 0.05));
+    tl.add(animateTyping(textEl, charDuration), 0.5);
   }
 
   return tl;

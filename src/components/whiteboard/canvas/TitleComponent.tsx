@@ -41,7 +41,6 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
           rx="4"
         />
       )}
-      {/* Invisible fill text for interaction */}
       <text
         ref={textRef}
         x={x}
@@ -50,21 +49,7 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
         fontFamily="'Patrick Hand', cursive"
         fontSize={fontSize}
         fill="hsl(var(--foreground))"
-        stroke="none"
-        style={{ userSelect: 'none' }}
-      >
-        {text}
-      </text>
-      {/* Stroke-only text for handwriting animation */}
-      <text
-        x={x}
-        y={y}
-        className="title-text-stroke"
-        fontFamily="'Patrick Hand', cursive"
-        fontSize={fontSize}
-        fill="none"
-        stroke="hsl(var(--foreground))"
-        strokeWidth="1.5"
+        data-full-text={text}
         style={{ userSelect: 'none' }}
       >
         {text}
