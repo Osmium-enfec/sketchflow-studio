@@ -248,6 +248,13 @@ function animateIndianCharacter(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  gsap.set(el, { opacity: 0, scale: 0.6, transformOrigin: 'center bottom' });
+  tl.to(el, { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.4)' });
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
@@ -260,6 +267,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   curvedArrow: animateCurvedArrow,
   foldedBox: animateFoldedBox,
   codeBox: animateCodeBox,
+  openPeep: animateOpenPeep,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
