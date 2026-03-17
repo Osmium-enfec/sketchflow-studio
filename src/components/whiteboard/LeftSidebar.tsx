@@ -1,5 +1,5 @@
 import React from 'react';
-import { Type, Square, ArrowRight, Highlighter, User, Smartphone, ArrowDown, CornerDownRight, FileText } from 'lucide-react';
+import { Type, Square, ArrowRight, Highlighter, User, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
 import { useWhiteboardStore, ComponentType } from '@/store/whiteboardStore';
 
 const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
