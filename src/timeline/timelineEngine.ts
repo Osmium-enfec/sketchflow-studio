@@ -8,6 +8,9 @@ const DURATION: Record<string, number> = {
   highlight: 0.6,
   character: 3.0,
   device: 2.5,
+  gradientArrow: 1.0,
+  curvedArrow: 0.8,
+  foldedBox: 1.5,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -159,6 +162,53 @@ function animateDevice(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateGradientArrow(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const shaft = el.querySelector('.gradient-arrow-shaft') as SVGPathElement | null;
+  const head = el.querySelector('.gradient-arrow-head') as SVGPathElement | null;
+
+  if (shaft) {
+    const len = shaft.getTotalLength();
+    gsap.set(shaft, { strokeDasharray: len, strokeDashoffset: len, fillOpacity: 0 });
+    tl.to(shaft, { strokeDashoffset: 0, fillOpacity: 1, duration: 0.7, ease: 'power1.inOut' });
+  }
+  if (head) {
+    gsap.set(head, { opacity: 0, scale: 0, transformOrigin: 'center' });
+    tl.to(head, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, '-=0.1');
+  }
+  return tl;
+}
+
+function animateCurvedArrow(el: SVGGElement): gsap.core.Timeline {
+  return animateArrow(el); // Same stroke-draw logic
+}
+
+function animateFoldedBox(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const body = el.querySelector('.foldedbox-body') as SVGPathElement | null;
+  const fold = el.querySelector('.foldedbox-fold') as SVGPathElement | null;
+  const text = el.querySelector('text') as SVGTextElement | null;
+
+  if (body) {
+    const len = body.getTotalLength();
+    gsap.set(body, { strokeDasharray: len, strokeDashoffset: len, fillOpacity: 0 });
+    tl.to(body, { strokeDashoffset: 0, duration: 0.8, ease: 'power1.inOut' });
+    tl.to(body, { fillOpacity: 1, duration: 0.3 }, '-=0.2');
+  }
+  if (fold) {
+    const len = fold.getTotalLength();
+    gsap.set(fold, { strokeDasharray: len, strokeDashoffset: len, fillOpacity: 0 });
+    tl.to(fold, { strokeDashoffset: 0, fillOpacity: 1, duration: 0.3, ease: 'power1.out' }, '-=0.3');
+  }
+  if (text) {
+    const fullText = text.textContent || '';
+    text.setAttribute('data-full-text', fullText);
+    const charDuration = Math.max(0.4, Math.min(1.0, fullText.length * 0.05));
+    tl.add(animateTyping(text, charDuration), '-=0.1');
+  }
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
@@ -166,6 +216,9 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   highlight: animateHighlight,
   character: animateCharacter,
   device: animateDevice,
+  gradientArrow: animateGradientArrow,
+  curvedArrow: animateCurvedArrow,
+  foldedBox: animateFoldedBox,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {

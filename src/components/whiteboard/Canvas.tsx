@@ -6,6 +6,9 @@ import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
 import DeviceComponent from './canvas/DeviceComponent';
+import GradientArrowComponent from './canvas/GradientArrowComponent';
+import CurvedArrowComponent from './canvas/CurvedArrowComponent';
+import FoldedBoxComponent from './canvas/FoldedBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -62,7 +65,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox')) return;
       setEditingId(id);
       setEditText(comp.props.text || '');
       
@@ -71,7 +74,7 @@ const Canvas: React.FC = () => {
       const scaleX = rect.width / CANVAS_W;
       const scaleY = rect.height / CANVAS_H;
       
-      if (comp.type === 'box') {
+      if (comp.type === 'box' || comp.type === 'foldedBox') {
         setEditPos({
           x: comp.props.x * scaleX + rect.left,
           y: comp.props.y * scaleY + rect.top,
@@ -138,7 +141,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box') {
+        if (comp.type === 'box' || comp.type === 'foldedBox') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -169,7 +172,7 @@ const Canvas: React.FC = () => {
       const newX = pt.x - offsetX;
       const newY = pt.y - offsetY;
 
-      if (comp.type === 'arrow') {
+      if (comp.type === 'arrow' || comp.type === 'gradientArrow' || comp.type === 'curvedArrow') {
         const ddx = newX - (comp.props.startX ?? 0);
         const ddy = newY - (comp.props.startY ?? 0);
         updateComponentProps(id, {
@@ -341,6 +344,41 @@ const Canvas: React.FC = () => {
                     component={comp}
                     isSelected={selectedId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
+              if (comp.type === 'gradientArrow') {
+                return (
+                  <GradientArrowComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onEndpointDrag={(e, endpoint) => handleEndpointDrag(e, comp.id, endpoint)}
+                  />
+                );
+              }
+              if (comp.type === 'curvedArrow') {
+                return (
+                  <CurvedArrowComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onEndpointDrag={(e, endpoint) => handleEndpointDrag(e, comp.id, endpoint)}
+                  />
+                );
+              }
+              if (comp.type === 'foldedBox') {
+                return (
+                  <FoldedBoxComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    isEditing={editingId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e) => handleDoubleClick(e, comp.id)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
               }
