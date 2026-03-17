@@ -11,6 +11,7 @@ import GradientArrowComponent from './canvas/GradientArrowComponent';
 import CurvedArrowComponent from './canvas/CurvedArrowComponent';
 import FoldedBoxComponent from './canvas/FoldedBoxComponent';
 import CodeBoxComponent from './canvas/CodeBoxComponent';
+import OpenPeepComponent from './canvas/OpenPeepComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -411,6 +412,16 @@ const Canvas: React.FC = () => {
                     isSelected={selectedId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
+              if (comp.type === 'openPeep') {
+                return (
+                  <OpenPeepComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                   />
                 );
               }

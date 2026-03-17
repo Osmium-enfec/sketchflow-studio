@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -104,6 +104,32 @@ const TopToolbar: React.FC = () => {
               <button onClick={() => { addComponent('indianCharacter'); setCharsOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <Smile className="h-4 w-4 text-muted-foreground" /> Indian Face
+              </button>
+              <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Open Peeps</div>
+              <button onClick={() => { addComponent('openPeep', { variant: 'explaining' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Explaining
+              </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'coffee' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Coffee
+              </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'pointing' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Pointing
+              </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'gaming' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Gaming
+              </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'hoodie' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Hoodie
+              </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'blazer' }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Blazer
               </button>
             </div>
           )}

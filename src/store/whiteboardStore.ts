@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox';
+export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep';
 
 export interface WhiteboardComponent {
   id: string;
@@ -40,6 +40,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   curvedArrow: (n) => ({ startX: 300, startY: 200, endX: 400, endY: 280 }),
   foldedBox: (n) => ({ text: 'Note ' + n, x: 500, y: 200 + n * 40, width: 260, height: 160 }),
   codeBox: (n) => ({ x: 400, y: 200 + n * 40, width: 400, height: 260 }),
+  openPeep: (n) => ({ x: 500 + n * 30, y: 150, scale: 0.3, variant: 'explaining' }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
