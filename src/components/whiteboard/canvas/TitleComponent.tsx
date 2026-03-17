@@ -48,7 +48,7 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
         className="title-text"
         fontFamily="'Patrick Hand', cursive"
         fontSize={fontSize}
-        fill="hsl(var(--foreground))"
+        fill={component.props.color || 'hsl(220 15% 20%)'}
         data-full-text={text}
         style={{ userSelect: 'none' }}
       >

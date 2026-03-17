@@ -24,6 +24,15 @@ const HIGHLIGHT_COLORS = [
   'hsl(280 60% 67%)',   // purple
 ];
 
+const TITLE_COLORS = [
+  'hsl(220 15% 20%)',   // dark (default)
+  'hsl(217 91% 60%)',   // blue
+  'hsl(0 80% 58%)',     // red
+  'hsl(130 55% 40%)',   // green
+  'hsl(280 60% 55%)',   // purple
+  'hsl(25 100% 55%)',   // orange
+];
+
 const Canvas: React.FC = () => {
   const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps } = useWhiteboardStore();
   const svgRef = useRef<SVGSVGElement>(null);
