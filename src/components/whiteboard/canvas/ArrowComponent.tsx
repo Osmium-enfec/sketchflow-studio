@@ -5,12 +5,12 @@ interface Props {
   component: WhiteboardComponent;
   isSelected: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
+  onEndpointDrag: (e: React.MouseEvent, endpoint: 'start' | 'end') => void;
 }
 
-const ArrowComponent: React.FC<Props> = ({ component, isSelected, onMouseDown }) => {
+const ArrowComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onEndpointDrag }) => {
   const { startX, startY, endX, endY } = component.props;
 
-  // Calculate arrowhead
   const angle = Math.atan2(endY - startY, endX - startX);
   const headLen = 20;
   const ax1 = endX - headLen * Math.cos(angle - Math.PI / 6);
@@ -18,8 +18,7 @@ const ArrowComponent: React.FC<Props> = ({ component, isSelected, onMouseDown })
   const ax2 = endX - headLen * Math.cos(angle + Math.PI / 6);
   const ay2 = endY - headLen * Math.sin(angle + Math.PI / 6);
 
-  // Slight curve for hand-drawn feel
-  const midX = (startX + endX) / 2 + (Math.random() * 4 - 2);
+  const midX = (startX + endX) / 2;
   const midY = (startY + endY) / 2 - 15;
 
   const pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`;
@@ -32,8 +31,14 @@ const ArrowComponent: React.FC<Props> = ({ component, isSelected, onMouseDown })
     >
       {isSelected && (
         <>
-          <circle cx={startX} cy={startY} r="8" fill="none" stroke="hsl(210 80% 70%)" strokeWidth="2" />
-          <circle cx={endX} cy={endY} r="8" fill="none" stroke="hsl(210 80% 70%)" strokeWidth="2" />
+          <circle cx={startX} cy={startY} r="10" fill="hsl(210 80% 70%)" fillOpacity="0.3" stroke="hsl(210 80% 70%)" strokeWidth="2"
+            style={{ cursor: 'crosshair' }}
+            onMouseDown={(e) => { e.stopPropagation(); onEndpointDrag(e, 'start'); }}
+          />
+          <circle cx={endX} cy={endY} r="10" fill="hsl(210 80% 70%)" fillOpacity="0.3" stroke="hsl(210 80% 70%)" strokeWidth="2"
+            style={{ cursor: 'crosshair' }}
+            onMouseDown={(e) => { e.stopPropagation(); onEndpointDrag(e, 'end'); }}
+          />
         </>
       )}
       <path

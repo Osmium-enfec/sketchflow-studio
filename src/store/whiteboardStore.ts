@@ -13,6 +13,7 @@ export interface WhiteboardComponent {
 interface WhiteboardStore {
   components: WhiteboardComponent[];
   selectedId: string | null;
+  editingId: string | null;
   isPlaying: boolean;
 
   addComponent: (type: ComponentType) => void;
@@ -20,6 +21,7 @@ interface WhiteboardStore {
   updateComponentProps: (id: string, props: Record<string, any>) => void;
   removeComponent: (id: string) => void;
   selectComponent: (id: string | null) => void;
+  setEditingId: (id: string | null) => void;
   reorderComponent: (id: string, newOrder: number) => void;
   setPlaying: (playing: boolean) => void;
 }
@@ -30,12 +32,13 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   title: (n) => ({ text: 'Title ' + n, x: 200, y: 100 + n * 60 }),
   box: (n) => ({ text: 'Box ' + n, x: 300, y: 200 + n * 40, width: 200, height: 120 }),
   arrow: (n) => ({ startX: 200, startY: 300 + n * 30, endX: 500, endY: 300 + n * 30 }),
-  highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250 }),
+  highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250, height: 18, color: 'hsl(48 100% 67%)' }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
   components: [],
   selectedId: null,
+  editingId: null,
   isPlaying: false,
 
   addComponent: (type) => {
@@ -66,9 +69,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
     set((s) => ({
       components: s.components.filter((c) => c.id !== id),
       selectedId: s.selectedId === id ? null : s.selectedId,
+      editingId: s.editingId === id ? null : s.editingId,
     })),
 
   selectComponent: (id) => set({ selectedId: id }),
+  setEditingId: (id) => set({ editingId: id }),
 
   reorderComponent: (id, newOrder) =>
     set((s) => ({
