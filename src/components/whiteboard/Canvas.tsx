@@ -5,6 +5,7 @@ import BoxComponent from './canvas/BoxComponent';
 import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
+import DeviceComponent from './canvas/DeviceComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -326,6 +327,16 @@ const Canvas: React.FC = () => {
               if (comp.type === 'character') {
                 return (
                   <CharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
+              if (comp.type === 'device') {
+                return (
+                  <DeviceComponent
                     key={comp.id}
                     component={comp}
                     isSelected={selectedId === comp.id}
