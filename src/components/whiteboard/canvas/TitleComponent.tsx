@@ -4,16 +4,19 @@ import { WhiteboardComponent } from '@/store/whiteboardStore';
 interface Props {
   component: WhiteboardComponent;
   isSelected: boolean;
+  isEditing: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
+  onDoubleClick: (e: React.MouseEvent) => void;
 }
 
-const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown }) => {
+const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
   const { text, x, y } = component.props;
 
   return (
     <g
       data-component-id={component.id}
       onMouseDown={onMouseDown}
+      onDoubleClick={onDoubleClick}
       style={{ cursor: 'move' }}
     >
       {isSelected && (
