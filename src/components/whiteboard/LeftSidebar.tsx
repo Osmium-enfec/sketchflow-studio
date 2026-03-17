@@ -8,6 +8,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   arrow: ArrowRight,
   highlight: Highlighter,
   character: User,
+  indianCharacter: Smile,
   device: Smartphone,
   gradientArrow: ArrowDown,
   curvedArrow: CornerDownRight,
