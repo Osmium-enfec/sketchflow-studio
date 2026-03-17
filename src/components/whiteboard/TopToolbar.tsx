@@ -131,6 +131,10 @@ const TopToolbar: React.FC = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Blazer
               </button>
+              <button onClick={() => { addComponent('openPeep', { variant: 'buttonShirt', scale: 1 }); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
+              </button>
             </div>
           )}
         </div>
