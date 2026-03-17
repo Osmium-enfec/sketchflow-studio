@@ -5,6 +5,7 @@ import BoxComponent from './canvas/BoxComponent';
 import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
+import IndianCharacterComponent from './canvas/IndianCharacterComponent';
 import DeviceComponent from './canvas/DeviceComponent';
 import GradientArrowComponent from './canvas/GradientArrowComponent';
 import CurvedArrowComponent from './canvas/CurvedArrowComponent';
