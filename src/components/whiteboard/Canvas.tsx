@@ -65,7 +65,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox')) return;
       setEditingId(id);
       setEditText(comp.props.text || '');
       
