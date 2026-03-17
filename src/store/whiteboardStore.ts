@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character';
+export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'device';
 
 export interface WhiteboardComponent {
   id: string;
@@ -16,7 +16,7 @@ interface WhiteboardStore {
   editingId: string | null;
   isPlaying: boolean;
 
-  addComponent: (type: ComponentType) => void;
+  addComponent: (type: ComponentType, extraProps?: Record<string, any>) => void;
   updateComponent: (id: string, updates: Partial<WhiteboardComponent>) => void;
   updateComponentProps: (id: string, props: Record<string, any>) => void;
   removeComponent: (id: string) => void;
@@ -34,6 +34,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   arrow: (n) => ({ startX: 200, startY: 300 + n * 30, endX: 500, endY: 300 + n * 30 }),
   highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250, height: 18, color: 'hsl(48 100% 67%)' }),
   character: (n) => ({ x: 600 + n * 30, y: 300, scale: 1 }),
+  device: (n) => ({ x: 700 + n * 30, y: 200, scale: 1, variant: 'phone' }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
@@ -42,14 +43,15 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
   editingId: null,
   isPlaying: false,
 
-  addComponent: (type) => {
+  addComponent: (type, extraProps) => {
     const id = String(nextId++);
     const count = get().components.length;
     const order = count + 1;
+    const props = { ...defaultProps[type](count), ...extraProps };
     set((s) => ({
       components: [
         ...s.components,
-        { id, type, props: defaultProps[type](count), order, delay: 0 },
+        { id, type, props, order, delay: 0 },
       ],
     }));
   },
