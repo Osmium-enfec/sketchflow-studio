@@ -260,7 +260,8 @@ const Canvas: React.FC = () => {
           <svg
             ref={svgRef}
             viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
-            className="w-full h-full canvas-bg"
+            className="w-full h-full"
+            style={{ backgroundColor: 'hsl(43 100% 98%)' }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
