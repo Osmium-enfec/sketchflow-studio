@@ -25,6 +25,7 @@ const labelMap: Record<ComponentType, string> = {
   gradientArrow: 'Gradient Arrow',
   curvedArrow: 'Curved Arrow',
   foldedBox: 'Folded Box',
+  codeBox: 'Code Box',
 };
 
 const LeftSidebar: React.FC = () => {

@@ -240,6 +240,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   gradientArrow: animateGradientArrow,
   curvedArrow: animateCurvedArrow,
   foldedBox: animateFoldedBox,
+  codeBox: animateCodeBox,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {

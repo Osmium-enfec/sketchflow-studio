@@ -383,6 +383,17 @@ const Canvas: React.FC = () => {
                   />
                 );
               }
+              if (comp.type === 'codeBox') {
+                return (
+                  <CodeBoxComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
               return null;
             })}
           </svg>

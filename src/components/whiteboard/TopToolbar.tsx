@@ -52,6 +52,10 @@ const TopToolbar: React.FC = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <FileText className="h-4 w-4 text-muted-foreground" /> Folded Box
               </button>
+              <button onClick={() => { addComponent('codeBox'); setBoxesOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Monitor className="h-4 w-4 text-muted-foreground" /> Code Box
+              </button>
             </div>
           )}
         </div>

@@ -38,6 +38,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   gradientArrow: (n) => ({ startX: 400, startY: 150, endX: 400, endY: 550 }),
   curvedArrow: (n) => ({ startX: 300, startY: 200, endX: 400, endY: 280 }),
   foldedBox: (n) => ({ text: 'Note ' + n, x: 500, y: 200 + n * 40, width: 260, height: 160 }),
+  codeBox: (n) => ({ x: 400, y: 200 + n * 40, width: 400, height: 260 }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
