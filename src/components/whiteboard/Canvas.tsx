@@ -172,7 +172,7 @@ const Canvas: React.FC = () => {
       const newX = pt.x - offsetX;
       const newY = pt.y - offsetY;
 
-      if (comp.type === 'arrow') {
+      if (comp.type === 'arrow' || comp.type === 'gradientArrow' || comp.type === 'curvedArrow') {
         const ddx = newX - (comp.props.startX ?? 0);
         const ddy = newY - (comp.props.startY ?? 0);
         updateComponentProps(id, {
