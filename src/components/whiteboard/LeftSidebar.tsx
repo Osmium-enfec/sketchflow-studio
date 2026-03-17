@@ -8,6 +8,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   arrow: ArrowRight,
   highlight: Highlighter,
   character: User,
+  device: Smartphone,
 };
 
 const labelMap: Record<ComponentType, string> = {
@@ -16,6 +17,7 @@ const labelMap: Record<ComponentType, string> = {
   arrow: 'Arrow',
   highlight: 'Highlight',
   character: 'Character',
+  device: 'Device',
 };
 
 const LeftSidebar: React.FC = () => {
