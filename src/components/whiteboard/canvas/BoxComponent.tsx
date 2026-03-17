@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import { textToSVGPaths, CharPath } from '@/utils/textToPath';
 import rough from 'roughjs';
 
 interface Props {
@@ -15,12 +14,11 @@ interface Props {
 const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMouseDown, onDoubleClick, onResizeStart }) => {
   const { x, y, width, height, text, fontSize: customFontSize } = component.props;
   const gRef = useRef<SVGGElement>(null);
-  const [charPaths, setCharPaths] = useState<CharPath[]>([]);
 
+  // Auto-scale font size based on box dimensions, or use custom
   const autoFontSize = Math.max(12, Math.min(width, height) * 0.18);
   const fontSize = customFontSize || Math.round(autoFontSize);
 
-  // Generate rough.js rectangle
   useEffect(() => {
     if (!gRef.current) return;
     const existing = gRef.current.querySelector('.rough-rect');
@@ -38,30 +36,13 @@ const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMou
       fillStyle: 'solid',
     });
     rect.classList.add('rough-rect');
-    // Insert before text paths
-    const firstPath = gRef.current.querySelector('.box-char-fill, .box-char');
-    if (firstPath) {
-      gRef.current.insertBefore(rect, firstPath);
+    const textEl = gRef.current.querySelector('text');
+    if (textEl) {
+      gRef.current.insertBefore(rect, textEl);
     } else {
       gRef.current.appendChild(rect);
     }
   }, [x, y, width, height]);
-
-  // Generate text paths centered in box
-  useEffect(() => {
-    if (!text) { setCharPaths([]); return; }
-    let cancelled = false;
-    // We need to estimate text width to center it
-    const estimatedWidth = text.length * fontSize * 0.5;
-    const textX = x + width / 2 - estimatedWidth / 2;
-    const textY = y + height / 2 + fontSize * 0.35;
-
-    textToSVGPaths(text, textX, textY, fontSize).then((paths) => {
-      if (cancelled) return;
-      setCharPaths(paths);
-    });
-    return () => { cancelled = true; };
-  }, [text, x, y, width, height, fontSize]);
 
   const handleSize = 8;
 
@@ -86,6 +67,7 @@ const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMou
             strokeDasharray="6 3"
             rx="4"
           />
+          {/* Resize handles */}
           <rect x={x + width - handleSize/2} y={y + height - handleSize/2} width={handleSize} height={handleSize}
             fill="hsl(210 80% 70%)" stroke="white" strokeWidth="1" rx="2"
             style={{ cursor: 'nwse-resize' }}
@@ -108,27 +90,17 @@ const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMou
           />
         </>
       )}
-      {/* Fill paths (visible after animation) */}
-      {charPaths.map((cp) => (
-        <path
-          key={`fill-${cp.index}`}
-          className="box-char-fill"
-          d={cp.pathData}
-          fill="hsl(0 0% 7%)"
-          stroke="none"
-        />
-      ))}
-      {/* Stroke paths (for animation tracing) */}
-      {charPaths.map((cp) => (
-        <path
-          key={`stroke-${cp.index}`}
-          className={`box-char box-char-${cp.index}`}
-          d={cp.pathData}
-          fill="none"
-          stroke="hsl(0 0% 7%)"
-          strokeWidth="1.5"
-        />
-      ))}
+      <text
+        x={x + width / 2}
+        y={y + height / 2 + fontSize * 0.35}
+        textAnchor="middle"
+        fontFamily="'Patrick Hand', cursive"
+        fontSize={fontSize}
+        fill="hsl(0 0% 7%)"
+        style={{ userSelect: 'none' }}
+      >
+        {text}
+      </text>
     </g>
   );
 };

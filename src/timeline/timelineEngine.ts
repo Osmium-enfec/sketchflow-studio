@@ -8,52 +8,45 @@ const DURATION: Record<string, number> = {
   highlight: 0.6,
 };
 
-function animateCharPaths(
-  el: SVGGElement,
-  charClass: string,
-  fillClass: string
-): gsap.core.Timeline {
+function animateTitle(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
-  const strokePaths = el.querySelectorAll(`path[class*="${charClass}"]`) as NodeListOf<SVGPathElement>;
-  const fillPaths = el.querySelectorAll(`.${fillClass}`) as NodeListOf<SVGPathElement>;
+  const fillText = el.querySelector('.title-text') as SVGTextElement | null;
+  const strokeText = el.querySelector('.title-text-stroke') as SVGTextElement | null;
 
-  if (strokePaths.length === 0) return tl;
+  if (fillText) {
+    gsap.set(fillText, { opacity: 0 });
+  }
 
-  // Hide fills initially
-  fillPaths.forEach((fp) => gsap.set(fp, { opacity: 0 }));
-
-  // Animate each character stroke path sequentially
-  strokePaths.forEach((path, i) => {
-    const length = path.getTotalLength?.() || 200;
-    gsap.set(path, {
+  if (strokeText) {
+    // Handwriting stroke animation
+    const length = strokeText.getComputedTextLength?.() || 500;
+    gsap.set(strokeText, {
       strokeDasharray: length,
       strokeDashoffset: length,
       opacity: 1,
     });
-    const charDuration = Math.min(0.4, Math.max(0.15, length / 500));
-    tl.to(path, {
+    tl.to(strokeText, {
       strokeDashoffset: 0,
-      duration: charDuration,
+      duration: 1.0,
       ease: 'power1.inOut',
-    }, i > 0 ? `-=${charDuration * 0.3}` : 0);
-  });
-
-  // After all strokes drawn, fade in fills and fade out strokes
-  tl.to(Array.from(fillPaths), { opacity: 1, duration: 0.25, ease: 'power1.out' });
-  tl.to(Array.from(strokePaths), { opacity: 0, duration: 0.25, ease: 'power1.out' }, '<');
+    });
+    // Then fade in the fill text and fade out the stroke
+    if (fillText) {
+      tl.to(fillText, { opacity: 1, duration: 0.3, ease: 'power1.out' }, '-=0.2');
+      tl.to(strokeText, { opacity: 0, duration: 0.3, ease: 'power1.out' }, '-=0.2');
+    }
+  } else if (fillText) {
+    tl.fromTo(fillText, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+  }
 
   return tl;
-}
-
-function animateTitle(el: SVGGElement): gsap.core.Timeline {
-  return animateCharPaths(el, 'title-char', 'title-char-fill');
 }
 
 function animateBox(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
   const roughRect = el.querySelector('.rough-rect');
+  const text = el.querySelector('text');
 
-  // Animate the rough.js rectangle border first
   if (roughRect) {
     const paths = roughRect.querySelectorAll('path');
     paths.forEach((path) => {
@@ -63,9 +56,9 @@ function animateBox(el: SVGGElement): gsap.core.Timeline {
     });
   }
 
-  // Then animate text paths
-  const textTl = animateCharPaths(el, 'box-char', 'box-char-fill');
-  tl.add(textTl, 0.5);
+  if (text) {
+    tl.fromTo(text, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power1.out' }, 0.5);
+  }
 
   return tl;
 }
