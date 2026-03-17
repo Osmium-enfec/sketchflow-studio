@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 
 interface Props {
@@ -10,7 +10,16 @@ interface Props {
 }
 
 const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
-  const { text, x, y } = component.props;
+  const { text, x, y, fontSize = 42 } = component.props;
+  const textRef = useRef<SVGTextElement>(null);
+  const [bbox, setBbox] = React.useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (textRef.current) {
+      const b = textRef.current.getBBox();
+      setBbox({ width: b.width, height: b.height });
+    }
+  }, [text, fontSize]);
 
   return (
     <g
@@ -22,9 +31,9 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
       {isSelected && (
         <rect
           x={x - 10}
-          y={y - 45}
-          width={text.length * 28 + 20}
-          height={60}
+          y={y - bbox.height - 5}
+          width={bbox.width + 20}
+          height={bbox.height + 15}
           fill="none"
           stroke="hsl(210 80% 70%)"
           strokeWidth="2"
@@ -32,13 +41,30 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
           rx="4"
         />
       )}
+      {/* Invisible fill text for interaction */}
       <text
+        ref={textRef}
         x={x}
         y={y}
         className="title-text"
         fontFamily="'Patrick Hand', cursive"
-        fontSize="42"
-        fill="hsl(0 0% 7%)"
+        fontSize={fontSize}
+        fill="hsl(var(--foreground))"
+        stroke="none"
+        style={{ userSelect: 'none' }}
+      >
+        {text}
+      </text>
+      {/* Stroke-only text for handwriting animation */}
+      <text
+        x={x}
+        y={y}
+        className="title-text-stroke"
+        fontFamily="'Patrick Hand', cursive"
+        fontSize={fontSize}
+        fill="none"
+        stroke="hsl(var(--foreground))"
+        strokeWidth="1.5"
         style={{ userSelect: 'none' }}
       >
         {text}

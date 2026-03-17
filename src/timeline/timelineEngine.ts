@@ -10,10 +10,35 @@ const DURATION: Record<string, number> = {
 
 function animateTitle(el: SVGGElement): gsap.core.Timeline {
   const tl = gsap.timeline();
-  const text = el.querySelector('text');
-  if (text) {
-    tl.fromTo(text, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+  const fillText = el.querySelector('.title-text') as SVGTextElement | null;
+  const strokeText = el.querySelector('.title-text-stroke') as SVGTextElement | null;
+
+  if (fillText) {
+    gsap.set(fillText, { opacity: 0 });
   }
+
+  if (strokeText) {
+    // Handwriting stroke animation
+    const length = strokeText.getComputedTextLength?.() || 500;
+    gsap.set(strokeText, {
+      strokeDasharray: length,
+      strokeDashoffset: length,
+      opacity: 1,
+    });
+    tl.to(strokeText, {
+      strokeDashoffset: 0,
+      duration: 1.0,
+      ease: 'power1.inOut',
+    });
+    // Then fade in the fill text and fade out the stroke
+    if (fillText) {
+      tl.to(fillText, { opacity: 1, duration: 0.3, ease: 'power1.out' }, '-=0.2');
+      tl.to(strokeText, { opacity: 0, duration: 0.3, ease: 'power1.out' }, '-=0.2');
+    }
+  } else if (fillText) {
+    tl.fromTo(fillText, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+  }
+
   return tl;
 }
 
@@ -76,7 +101,6 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
-  // Kill any existing animations
   gsap.killTweensOf(svgEl.querySelectorAll('*'));
 
   const sorted = [...components].sort((a, b) => a.order - b.order);

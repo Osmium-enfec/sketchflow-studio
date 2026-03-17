@@ -12,8 +12,12 @@ interface Props {
 }
 
 const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMouseDown, onDoubleClick, onResizeStart }) => {
-  const { x, y, width, height, text } = component.props;
+  const { x, y, width, height, text, fontSize: customFontSize } = component.props;
   const gRef = useRef<SVGGElement>(null);
+
+  // Auto-scale font size based on box dimensions, or use custom
+  const autoFontSize = Math.max(12, Math.min(width, height) * 0.18);
+  const fontSize = customFontSize || Math.round(autoFontSize);
 
   useEffect(() => {
     if (!gRef.current) return;
@@ -88,10 +92,10 @@ const BoxComponent: React.FC<Props> = ({ component, isSelected, isEditing, onMou
       )}
       <text
         x={x + width / 2}
-        y={y + height / 2 + 6}
+        y={y + height / 2 + fontSize * 0.35}
         textAnchor="middle"
         fontFamily="'Patrick Hand', cursive"
-        fontSize="24"
+        fontSize={fontSize}
         fill="hsl(0 0% 7%)"
         style={{ userSelect: 'none' }}
       >
