@@ -383,6 +383,7 @@ const Canvas: React.FC = () => {
                 );
               }
               return null;
+            })}
           </svg>
         </div>
       </div>
