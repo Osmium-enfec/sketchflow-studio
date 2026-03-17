@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
