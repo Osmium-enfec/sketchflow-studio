@@ -23,15 +23,17 @@ import AweFace from '@opeepsfun/open-peeps/build/face/Awe';
 
 import GlassesAccessory from '@opeepsfun/open-peeps/build/accessory/Glasses';
 import FullBeard from '@opeepsfun/open-peeps/build/beard/Full';
+import ButtonShirtSmilingPeep from './peeps/ButtonShirtSmilingPeep';
 
 export const PEEP_PRESETS: Record<string, {
   label: string;
-  Body: React.FC<any>;
-  Head: React.FC<any>;
-  Face: React.FC<any>;
+  Body?: React.FC<any>;
+  Head?: React.FC<any>;
+  Face?: React.FC<any>;
   Beard?: React.FC<any>;
   Accessory?: React.FC<any>;
   headOffset?: string;
+  CustomComponent?: React.FC;
 }> = {
   explaining: {
     label: 'Explaining',
@@ -73,6 +75,10 @@ export const PEEP_PRESETS: Record<string, {
     Face: CalmFace,
     Beard: FullBeard,
   },
+  buttonShirt: {
+    label: 'Button Shirt',
+    CustomComponent: ButtonShirtSmilingPeep,
+  },
 };
 
 interface Props {
@@ -85,8 +91,9 @@ const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown
   const { x, y, scale = 0.3, variant = 'explaining' } = component.props;
   const preset = PEEP_PRESETS[variant] || PEEP_PRESETS.explaining;
 
-  const width = 940 * scale;
-  const height = 1130 * scale;
+  const isCustom = !!preset.CustomComponent;
+  const width = (isCustom ? 240 : 940) * scale;
+  const height = (isCustom ? 324 : 1130) * scale;
 
   return (
     <g
@@ -94,34 +101,36 @@ const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown
       onMouseDown={onMouseDown}
       style={{ cursor: 'grab' }}
     >
-      {/* Render directly in SVG canvas for GSAP animation access */}
       <g transform={`translate(${x}, ${y}) scale(${scale})`}>
-        {/* Use the same layout as the original Effigy viewBox */}
-        <g transform="translate(-184, -210)">
-          <g id="Bust">
-            <g className="peep-body" transform="translate(147, 639) scale(1 1)">
-              <preset.Body />
-            </g>
-            <g className="peep-head" transform={preset.headOffset || 'translate(0 0)'}>
-              <g className="peep-hair" transform="translate(342, 190) scale(1 1)">
-                <preset.Head />
+        {isCustom ? (
+          <preset.CustomComponent />
+        ) : (
+          <g transform="translate(-184, -210)">
+            <g id="Bust">
+              <g className="peep-body" transform="translate(147, 639) scale(1 1)">
+                <preset.Body />
               </g>
-              <g className="peep-face" transform="translate(531, 366) scale(1 1)">
-                <preset.Face />
+              <g className="peep-head" transform={preset.headOffset || 'translate(0 0)'}>
+                <g className="peep-hair" transform="translate(342, 190) scale(1 1)">
+                  <preset.Head />
+                </g>
+                <g className="peep-face" transform="translate(531, 366) scale(1 1)">
+                  <preset.Face />
+                </g>
+                {preset.Beard && (
+                  <g className="peep-beard" transform="translate(495, 518) scale(1 1)">
+                    <preset.Beard />
+                  </g>
+                )}
+                {preset.Accessory && (
+                  <g className="peep-accessory" transform="translate(419, 421) scale(1 1)">
+                    <preset.Accessory />
+                  </g>
+                )}
               </g>
-              {preset.Beard && (
-                <g className="peep-beard" transform="translate(495, 518) scale(1 1)">
-                  <preset.Beard />
-                </g>
-              )}
-              {preset.Accessory && (
-                <g className="peep-accessory" transform="translate(419, 421) scale(1 1)">
-                  <preset.Accessory />
-                </g>
-              )}
             </g>
           </g>
-        </g>
+        )}
       </g>
       {isSelected && (
         <rect
