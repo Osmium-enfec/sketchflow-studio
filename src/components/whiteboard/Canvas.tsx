@@ -24,6 +24,15 @@ const HIGHLIGHT_COLORS = [
   'hsl(280 60% 67%)',   // purple
 ];
 
+const TITLE_COLORS = [
+  'hsl(220 15% 20%)',   // dark (default)
+  'hsl(217 91% 60%)',   // blue
+  'hsl(0 80% 58%)',     // red
+  'hsl(130 55% 40%)',   // green
+  'hsl(280 60% 55%)',   // purple
+  'hsl(25 100% 55%)',   // orange
+];
+
 const Canvas: React.FC = () => {
   const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps } = useWhiteboardStore();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -219,18 +228,18 @@ const Canvas: React.FC = () => {
         <button onClick={zoomIn} className="px-2 py-1 text-sm font-medium hover:bg-muted rounded transition-colors">+</button>
       </div>
 
-      {/* Highlight color picker when highlight selected */}
-      {selectedComp?.type === 'highlight' && (
+      {/* Color picker for highlight or title */}
+      {selectedComp && (selectedComp.type === 'highlight' || selectedComp.type === 'title') && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
           <span className="text-xs text-muted-foreground font-medium">Color:</span>
-          {HIGHLIGHT_COLORS.map((color) => (
+          {(selectedComp.type === 'title' ? TITLE_COLORS : HIGHLIGHT_COLORS).map((color) => (
             <button
               key={color}
               onClick={() => updateComponentProps(selectedComp.id, { color })}
               className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
               style={{
                 backgroundColor: color,
-                borderColor: selectedComp.props.color === color ? 'hsl(0 0% 7%)' : 'transparent',
+                borderColor: (selectedComp.props.color || (selectedComp.type === 'title' ? TITLE_COLORS[0] : HIGHLIGHT_COLORS[0])) === color ? 'hsl(0 0% 7%)' : 'transparent',
               }}
             />
           ))}
