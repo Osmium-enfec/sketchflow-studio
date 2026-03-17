@@ -210,6 +210,26 @@ function animateFoldedBox(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateCodeBox(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const body = el.querySelector('.codebox-body') as SVGRectElement | null;
+  const dots = el.querySelectorAll('.codebox-dot');
+
+  // Fade in body
+  if (body) {
+    gsap.set(body, { opacity: 0, scaleX: 0.8, scaleY: 0.8, transformOrigin: 'center' });
+    tl.to(body, { opacity: 1, scaleX: 1, scaleY: 1, duration: 0.6, ease: 'power2.out' });
+  }
+
+  // Pop in dots one by one
+  dots.forEach((dot, i) => {
+    gsap.set(dot, { opacity: 0, scale: 0, transformOrigin: 'center' });
+    tl.to(dot, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(3)' }, 0.5 + i * 0.12);
+  });
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
