@@ -347,8 +347,42 @@ const Canvas: React.FC = () => {
                   />
                 );
               }
+              if (comp.type === 'gradientArrow') {
+                return (
+                  <GradientArrowComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onEndpointDrag={(e, endpoint) => handleEndpointDrag(e, comp.id, endpoint)}
+                  />
+                );
+              }
+              if (comp.type === 'curvedArrow') {
+                return (
+                  <CurvedArrowComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onEndpointDrag={(e, endpoint) => handleEndpointDrag(e, comp.id, endpoint)}
+                  />
+                );
+              }
+              if (comp.type === 'foldedBox') {
+                return (
+                  <FoldedBoxComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    isEditing={editingId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e) => handleDoubleClick(e, comp.id)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
               return null;
-            })}
           </svg>
         </div>
       </div>
