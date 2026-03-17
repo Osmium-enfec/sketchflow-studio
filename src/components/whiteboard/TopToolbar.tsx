@@ -89,9 +89,25 @@ const TopToolbar: React.FC = () => {
         <Button variant="ghost" size="sm" onClick={() => addComponent('highlight')} className="gap-1.5">
           <Highlighter className="h-4 w-4" /> Highlight
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => addComponent('character')} className="gap-1.5">
-          <User className="h-4 w-4" /> Character
-        </Button>
+
+        {/* Characters dropdown */}
+        <div className="relative" ref={charsRef}>
+          <Button variant="ghost" size="sm" onClick={() => { setCharsOpen(!charsOpen); setArrowsOpen(false); setBoxesOpen(false); setAndroidOpen(false); }} className="gap-1.5">
+            <User className="h-4 w-4" /> Character <ChevronIcon open={charsOpen} />
+          </Button>
+          {charsOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+              <button onClick={() => { addComponent('character'); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <User className="h-4 w-4 text-muted-foreground" /> Doodle Character
+              </button>
+              <button onClick={() => { addComponent('indianCharacter'); setCharsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Smile className="h-4 w-4 text-muted-foreground" /> Indian Face
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Android dropdown */}
         <div className="relative" ref={dropdownRef}>

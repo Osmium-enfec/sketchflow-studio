@@ -231,12 +231,29 @@ function animateCodeBox(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateIndianCharacter(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  // Fade + scale the whole face in
+  gsap.set(el, { opacity: 0, scale: 0.7, transformOrigin: 'center center' });
+  tl.to(el, { opacity: 1, scale: 1, duration: 0.8, ease: 'back.out(1.4)' });
+
+  // Then reveal individual parts with slight stagger
+  const parts = el.querySelectorAll('.indian-face-shape, .indian-hair-main, .indian-hair-top, .indian-eyes, .indian-eyebrows, .indian-nose, .indian-lips');
+  parts.forEach((part, i) => {
+    gsap.set(part, { opacity: 0 });
+    tl.to(part, { opacity: 1, duration: 0.15, ease: 'power2.out' }, 0.3 + i * 0.08);
+  });
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
   arrow: animateArrow,
   highlight: animateHighlight,
   character: animateCharacter,
+  indianCharacter: animateIndianCharacter,
   device: animateDevice,
   gradientArrow: animateGradientArrow,
   curvedArrow: animateCurvedArrow,

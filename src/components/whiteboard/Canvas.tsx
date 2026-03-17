@@ -348,7 +348,16 @@ const Canvas: React.FC = () => {
                   />
                 );
               }
-              if (comp.type === 'device') {
+              if (comp.type === 'indianCharacter') {
+                return (
+                  <IndianCharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
                 return (
                   <DeviceComponent
                     key={comp.id}

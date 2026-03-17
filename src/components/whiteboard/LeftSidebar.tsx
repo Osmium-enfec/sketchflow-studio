@@ -22,6 +22,7 @@ const labelMap: Record<ComponentType, string> = {
   arrow: 'Arrow',
   highlight: 'Highlight',
   character: 'Character',
+  indianCharacter: 'Indian Face',
   device: 'Device',
   gradientArrow: 'Gradient Arrow',
   curvedArrow: 'Curved Arrow',
