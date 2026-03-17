@@ -6,6 +6,9 @@ import ArrowComponent from './canvas/ArrowComponent';
 import HighlightComponent from './canvas/HighlightComponent';
 import CharacterComponent from './canvas/CharacterComponent';
 import DeviceComponent from './canvas/DeviceComponent';
+import GradientArrowComponent from './canvas/GradientArrowComponent';
+import CurvedArrowComponent from './canvas/CurvedArrowComponent';
+import FoldedBoxComponent from './canvas/FoldedBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
