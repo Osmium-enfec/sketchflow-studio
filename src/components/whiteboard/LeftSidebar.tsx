@@ -1,5 +1,5 @@
 import React from 'react';
-import { Type, Square, ArrowRight, Highlighter } from 'lucide-react';
+import { Type, Square, ArrowRight, Highlighter, User } from 'lucide-react';
 import { useWhiteboardStore, ComponentType } from '@/store/whiteboardStore';
 
 const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
@@ -7,6 +7,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   box: Square,
   arrow: ArrowRight,
   highlight: Highlighter,
+  character: User,
 };
 
 const labelMap: Record<ComponentType, string> = {
@@ -14,6 +15,7 @@ const labelMap: Record<ComponentType, string> = {
   box: 'Box',
   arrow: 'Arrow',
   highlight: 'Highlight',
+  character: 'Character',
 };
 
 const LeftSidebar: React.FC = () => {

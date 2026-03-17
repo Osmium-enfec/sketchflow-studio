@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2 } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -22,6 +22,9 @@ const TopToolbar: React.FC = () => {
         </Button>
         <Button variant="ghost" size="sm" onClick={() => addComponent('highlight')} className="gap-1.5">
           <Highlighter className="h-4 w-4" /> Highlight
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => addComponent('character')} className="gap-1.5">
+          <User className="h-4 w-4" /> Character
         </Button>
       </div>
       <div className="flex items-center gap-2">
