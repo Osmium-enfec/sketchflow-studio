@@ -357,6 +357,7 @@ const Canvas: React.FC = () => {
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                   />
                 );
+              }
               if (comp.type === 'device') {
                 return (
                   <DeviceComponent
