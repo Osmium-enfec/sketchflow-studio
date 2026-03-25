@@ -62,6 +62,36 @@ export type Database = {
         }
         Relationships: []
       }
+      whiteboard_commands: {
+        Row: {
+          chat_id: number
+          command_type: string
+          component_type: string
+          created_at: string
+          id: string
+          processed: boolean
+          props: Json
+        }
+        Insert: {
+          chat_id: number
+          command_type: string
+          component_type: string
+          created_at?: string
+          id?: string
+          processed?: boolean
+          props?: Json
+        }
+        Update: {
+          chat_id?: number
+          command_type?: string
+          component_type?: string
+          created_at?: string
+          id?: string
+          processed?: boolean
+          props?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
