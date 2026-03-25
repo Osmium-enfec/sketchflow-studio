@@ -3,10 +3,8 @@ import TopToolbar from '@/components/whiteboard/TopToolbar';
 import LeftSidebar from '@/components/whiteboard/LeftSidebar';
 import Canvas from '@/components/whiteboard/Canvas';
 import BottomPanel from '@/components/whiteboard/BottomPanel';
-import { useTelegramCommands } from '@/hooks/useTelegramCommands';
 
 const Index: React.FC = () => {
-  useTelegramCommands();
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <TopToolbar />
