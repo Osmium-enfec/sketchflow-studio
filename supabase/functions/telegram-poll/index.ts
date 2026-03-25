@@ -4,19 +4,42 @@ const GATEWAY_URL = 'https://connector-gateway.lovable.dev/telegram';
 const MAX_RUNTIME_MS = 55_000;
 const MIN_REMAINING_MS = 5_000;
 
-const AI_SYSTEM_PROMPT = `You are an AI assistant that converts user messages into structured JSON.
-Given a user message, extract the project name and a list of actions.
-Always respond with valid JSON in this exact format:
-{"project": "<project name or empty string>", "actions": ["<action1>", "<action2>", ...]}
+const AI_SYSTEM_PROMPT = `You are an AI that converts natural language into whiteboard component commands.
+
+Available component types: title, box, arrow, highlight, character, device, gradientArrow, curvedArrow, foldedBox, codeBox, openPeep
+
+For each component, output a JSON array of commands. Each command has:
+- "type": one of the component types above
+- "props": properties for that component
+
+Property guidelines:
+- title: { "text": "...", "x": 100-1600, "y": 100-900, "color": "#hex" }
+- box: { "text": "...", "x": 100-1600, "y": 100-900, "width": 150-400, "height": 80-200 }
+- arrow: { "startX": num, "startY": num, "endX": num, "endY": num }
+- highlight: { "x": num, "y": num, "width": 100-400, "height": 18, "color": "hsl(48 100% 67%)" }
+- foldedBox: { "text": "...", "x": num, "y": num, "width": 200-300, "height": 120-200 }
+- codeBox: { "x": num, "y": num, "width": 300-500, "height": 200-300 }
+- character: { "x": num, "y": num, "scale": 1 }
+- device: { "x": num, "y": num, "scale": 1, "variant": "phone" or "tablet" }
+- openPeep: { "x": num, "y": num, "scale": 0.3, "variant": "explaining" or "pointingUp" or "sitting" }
+- gradientArrow: { "startX": num, "startY": num, "endX": num, "endY": num }
+- curvedArrow: { "startX": num, "startY": num, "endX": num, "endY": num }
+
+Layout tips: Space components so they don't overlap. Use x: 200-1600, y: 100-900.
+
+Always respond with valid JSON: { "components": [...] }
 
 Examples:
-- "Add a login page to my e-commerce app" → {"project": "e-commerce app", "actions": ["Add a login page"]}
-- "Create a dashboard with charts and a sidebar" → {"project": "", "actions": ["Create a dashboard", "Add charts", "Add a sidebar"]}
-- "Update the navbar color to blue in MyApp" → {"project": "MyApp", "actions": ["Update the navbar color to blue"]}
+- "Add a title Hello World" → {"components":[{"type":"title","props":{"text":"Hello World","x":400,"y":200}}]}
+- "Create a flowchart with 3 boxes and arrows" → {"components":[{"type":"box","props":{"text":"Step 1","x":200,"y":300,"width":200,"height":120}},{"type":"arrow","props":{"startX":400,"startY":360,"endX":550,"endY":360}},{"type":"box","props":{"text":"Step 2","x":550,"y":300,"width":200,"height":120}},{"type":"arrow","props":{"startX":750,"startY":360,"endX":900,"endY":360}},{"type":"box","props":{"text":"Step 3","x":900,"y":300,"width":200,"height":120}}]}
+- "Add a character explaining something with a title" → {"components":[{"type":"title","props":{"text":"Explanation","x":400,"y":150}},{"type":"openPeep","props":{"x":500,"y":250,"scale":0.3,"variant":"explaining"}}]}`;
 
-If the message is unclear or not related to a project, still try your best to extract meaningful actions.`;
+interface WhiteboardCommand {
+  type: string;
+  props: Record<string, any>;
+}
 
-async function convertMessageToJson(text: string, lovableApiKey: string): Promise<{ project: string; actions: string[] }> {
+async function convertToWhiteboardCommands(text: string, lovableApiKey: string): Promise<WhiteboardCommand[]> {
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -36,22 +59,21 @@ async function convertMessageToJson(text: string, lovableApiKey: string): Promis
 
     if (!response.ok) {
       console.error(`AI API call failed [${response.status}]`);
-      return { project: '', actions: [text] };
+      return [{ type: 'title', props: { text, x: 400, y: 300 } }];
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     if (content) {
       const parsed = JSON.parse(content);
-      return {
-        project: parsed.project || '',
-        actions: Array.isArray(parsed.actions) ? parsed.actions : [text],
-      };
+      if (Array.isArray(parsed.components)) {
+        return parsed.components;
+      }
     }
   } catch (e) {
     console.error('AI conversion error:', e);
   }
-  return { project: '', actions: [text] };
+  return [{ type: 'title', props: { text, x: 400, y: 300 } }];
 }
 
 Deno.serve(async () => {
@@ -111,19 +133,51 @@ Deno.serve(async () => {
     const updates = data.result ?? [];
     if (updates.length === 0) continue;
 
-    // Process each message: convert to JSON with AI and reply
     for (const update of updates) {
       if (!update.message?.text) continue;
 
       const chatId = update.message.chat.id;
       const messageText = update.message.text;
 
-      // Convert message to structured JSON using AI
-      const jsonResult = await convertMessageToJson(messageText, LOVABLE_API_KEY);
-      const replyText = JSON.stringify(jsonResult, null, 2);
+      // Skip bot commands like /start
+      if (messageText.startsWith('/')) {
+        await fetch(`${GATEWAY_URL}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'X-Connection-Api-Key': TELEGRAM_API_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: '👋 Send me a message describing what you want on the whiteboard!\n\nExamples:\n• "Add a title saying Hello World"\n• "Create 3 boxes with arrows between them"\n• "Add a character explaining a concept"',
+          }),
+        });
+        continue;
+      }
 
-      // Reply back to the user with the JSON
-      const sendResponse = await fetch(`${GATEWAY_URL}/sendMessage`, {
+      // Convert message to whiteboard commands using AI
+      const commands = await convertToWhiteboardCommands(messageText, LOVABLE_API_KEY);
+
+      // Insert each command into whiteboard_commands table
+      const rows = commands.map((cmd) => ({
+        chat_id: chatId,
+        command_type: 'add_component',
+        component_type: cmd.type,
+        props: cmd.props,
+      }));
+
+      const { error: cmdErr } = await supabase
+        .from('whiteboard_commands')
+        .insert(rows);
+
+      if (cmdErr) {
+        console.error('Command insert error:', cmdErr.message);
+      }
+
+      // Reply with confirmation
+      const componentList = commands.map(c => `• ${c.type}: ${c.props.text || ''}`).join('\n');
+      await fetch(`${GATEWAY_URL}/sendMessage`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -132,35 +186,25 @@ Deno.serve(async () => {
         },
         body: JSON.stringify({
           chat_id: chatId,
-          text: `\`\`\`json\n${replyText}\n\`\`\``,
-          parse_mode: 'Markdown',
+          text: `✅ Added ${commands.length} component(s) to whiteboard:\n${componentList}`,
         }),
       });
 
-      if (!sendResponse.ok) {
-        console.error(`Failed to send reply to chat ${chatId}`);
-      }
-
-      // Store in database
-      const { error: insertErr } = await supabase
+      // Store message
+      await supabase
         .from('telegram_messages')
         .upsert({
           update_id: update.update_id,
           chat_id: chatId,
           text: messageText,
           raw_update: update,
-          reply_json: jsonResult,
+          reply_json: { components: commands },
           replied: true,
         }, { onConflict: 'update_id' });
-
-      if (insertErr) {
-        console.error('Insert error:', insertErr.message);
-      }
 
       totalProcessed++;
     }
 
-    // Advance offset
     const newOffset = Math.max(...updates.map((u: any) => u.update_id)) + 1;
     await supabase
       .from('telegram_bot_state')
