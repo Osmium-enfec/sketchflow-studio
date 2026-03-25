@@ -18,15 +18,14 @@ If the message is unclear or not related to a project, still try your best to ex
 
 async function convertMessageToJson(text: string, lovableApiKey: string): Promise<{ project: string; actions: string[] }> {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://lovable.dev',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
+        model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: AI_SYSTEM_PROMPT },
           { role: 'user', content: text },
