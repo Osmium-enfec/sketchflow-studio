@@ -20,6 +20,7 @@ import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
 import { toast } from 'sonner';
+import { CHARACTER_ANIMATIONS } from '@/lib/characterAnimations';
 
 const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
 const NOTE_SWATCH_COLORS: Record<string, string> = {
@@ -355,6 +356,26 @@ const Canvas: React.FC = () => {
                 borderColor: (selectedComp.props.noteColor || 'green') === key ? 'hsl(0 0% 7%)' : 'transparent',
               }}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Animation selector for character components */}
+      {selectedComp && (selectedComp.type === 'indianCharacter' || selectedComp.type === 'openPeep' || selectedComp.type === 'character') && (
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
+          <span className="text-xs text-muted-foreground font-medium">Animation:</span>
+          {CHARACTER_ANIMATIONS.map((anim) => (
+            <button
+              key={anim.value}
+              onClick={() => updateComponentProps(selectedComp.id, { animation: anim.value })}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                (selectedComp.props.animation || 'idle') === anim.value
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              {anim.label}
+            </button>
           ))}
         </div>
       )}
