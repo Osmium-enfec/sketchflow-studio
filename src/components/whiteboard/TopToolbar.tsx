@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage, FileCode2 } from 'lucide-react';
 import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -83,6 +83,9 @@ const TopToolbar: React.FC = () => {
         <div className="h-6 w-px bg-border" />
         <Button variant="ghost" size="sm" onClick={() => addComponent('title')} className="gap-1.5">
           <Type className="h-4 w-4" /> Title
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown')} className="gap-1.5">
+          <FileCode2 className="h-4 w-4" /> Markdown
         </Button>
 
         {/* Boxes dropdown */}
