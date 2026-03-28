@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { applyCharacterAnimation, CharacterAnimation } from '@/lib/characterAnimations';
 
 // Direct ESM imports of individual Open Peeps parts
 import ExplainingBody from '@opeepsfun/open-peeps/build/body/effigy/Explaining';
@@ -88,12 +89,31 @@ interface Props {
 }
 
 const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown }) => {
-  const { x, y, scale = 0.3, variant = 'explaining' } = component.props;
+  const { x, y, scale = 0.3, variant = 'explaining', animation = 'idle' } = component.props;
   const preset = PEEP_PRESETS[variant] || PEEP_PRESETS.explaining;
-
   const isCustom = !!preset.CustomComponent;
+
+  const headGroupRef = useRef<SVGGElement>(null);
+  const faceGroupRef = useRef<SVGGElement>(null);
+  const bodyGroupRef = useRef<SVGGElement>(null);
+
   const width = (isCustom ? 240 : 940) * scale;
   const height = (isCustom ? 324 : 1130) * scale;
+
+  // Apply character animation
+  useEffect(() => {
+    if (isCustom) return;
+
+    const animTl = applyCharacterAnimation(animation as CharacterAnimation, {
+      mouthEl: faceGroupRef.current,
+      headEl: headGroupRef.current,
+      bodyEl: bodyGroupRef.current,
+    });
+
+    return () => {
+      animTl?.kill();
+    };
+  }, [animation, isCustom, variant]);
 
   return (
     <g
@@ -107,14 +127,14 @@ const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown
         ) : (
           <g transform="translate(-184, -210)">
             <g id="Bust">
-              <g className="peep-body" transform="translate(147, 639) scale(1 1)">
+              <g ref={bodyGroupRef} className="peep-body" transform="translate(147, 639) scale(1 1)">
                 <preset.Body />
               </g>
-              <g className="peep-head" transform={preset.headOffset || 'translate(0 0)'}>
+              <g ref={headGroupRef} className="peep-head" transform={preset.headOffset || 'translate(0 0)'}>
                 <g className="peep-hair" transform="translate(342, 190) scale(1 1)">
                   <preset.Head />
                 </g>
-                <g className="peep-face" transform="translate(531, 366) scale(1 1)">
+                <g ref={faceGroupRef} className="peep-face" transform="translate(531, 366) scale(1 1)">
                   <preset.Face />
                 </g>
                 {preset.Beard && (
