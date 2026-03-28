@@ -1,64 +1,99 @@
 
 
-# Replace html2canvas Video Export with Canvas API + Lottie Renderer
+# Rewrite Video Export with WebCodecs API + mp4-muxer
 
-## Problem
-`html2canvas` is fundamentally unsuitable for frame-by-frame video capture — it's slow (~200ms per frame), captures the viewport with CSS transforms/zoom artifacts, and produces misaligned output with empty margins.
+## Problem Summary
+The current export pipeline has multiple compounding failures:
+1. **MediaRecorder** produces 0-second or black-screen WebM files because it wasn't designed for programmatic frame-by-frame capture
+2. **FFmpeg.wasm** hangs during initialization (25MB WASM download + environment restrictions)
+3. The SVG serialization loses styles, and Lottie canvas rendering isn't compositing correctly
+4. The animation itself broke — characters show a single pose instead of animating
 
-## New Approach: Offscreen Canvas Rendering
+## New Approach: WebCodecs API + mp4-muxer
 
-Instead of screenshotting the DOM, we **render each frame programmatically** onto an offscreen `<canvas>` by reading the scene graph from the whiteboard store and drawing each component directly.
+**WebCodecs** is a browser-native API that gives direct access to hardware-accelerated H.264 encoding — no WASM, no MediaRecorder timing hacks. Combined with the **mp4-muxer** npm package, it produces real `.mp4` files at 10x faster than realtime.
+
+This is what tools like Canva use — they leverage WebCodecs (or server-side rendering for complex cases) for video export.
 
 ```text
-Store (components[]) → for each frame:
-  1. Clear offscreen canvas (1920×1080)
-  2. Draw static SVG elements (boxes, arrows, text) via SVG→Image→drawImage
-  3. Draw Lottie characters by advancing their frame and rendering to canvas
-  4. Feed frame to MediaRecorder (captureStream)
-→ Download .webm
+Canvas Frame → VideoFrame → VideoEncoder (H.264) → mp4-muxer → .mp4 blob → download
 ```
 
-## How It Works
+## Plan
 
-### Phase 1: SVG-only elements (boxes, arrows, titles, highlights, etc.)
-- Clone the SVG element, strip all `foreignObject` nodes (Lottie containers)
-- Set explicit `width`/`height`/`viewBox` on the clone to match canvas dimensions (e.g. 1920×1080)
-- Serialize to blob → load as `Image` → `drawImage` onto offscreen canvas
-- This captures all non-animated content perfectly with no layout issues
+### Step 1: Remove broken export infrastructure
+- Delete `src/lib/ffmpegEncoder.ts` (FFmpeg.wasm — doesn't work)
+- Remove `@ffmpeg/ffmpeg` and `@ffmpeg/util` from package.json
+- Strip the broken `exportMP4` from `canvasExport.ts`
 
-### Phase 2: Lottie characters rendered via `lottie-web` renderer
-- For each `walkingCharacter` component, create a standalone `lottie-web` animation instance (not tied to DOM)
-- Use `lottie.loadAnimation({ renderer: 'canvas' })` to render each character's current frame directly onto the offscreen canvas at the correct position
-- Advance frames manually with `goToAndStop(frameNum)` synced to the timeline
+### Step 2: Install mp4-muxer
+- Add `mp4-muxer` package (lightweight, ~50KB, no WASM)
 
-### Phase 3: Frame capture loop
-- Use `requestAnimationFrame` at 30fps
-- For each frame: draw SVG snapshot + overlay Lottie canvas renders
-- `MediaRecorder` on `captureStream(30)` encodes to WebM
-- No html2canvas dependency needed at all
+### Step 3: Rewrite `canvasExport.ts` with WebCodecs pipeline
+- Use `VideoEncoder` with codec `avc1.42001f` (H.264 Baseline — universal compatibility)
+- For each frame: `timeline.seek(t)` → render SVG + Lottie to offscreen canvas → create `VideoFrame` → `encoder.encode()` → `mp4-muxer.addVideoChunk()`
+- Finalize muxer → download as `.mp4`
+- No real-time delays needed — frames encode as fast as the CPU/GPU can handle
 
-## Files to Change
+### Step 4: Fix the SVG + Lottie rendering in `canvasRenderer.ts`
+- **SVG**: Inline all computed styles before serialization (fill, stroke, font, opacity, transform) so nothing is lost
+- **Lottie**: Ensure `lottie-web` canvas renderer containers are properly DOM-attached and sized
+- **Compositing**: Draw SVG base layer first, then overlay each Lottie character at its current position/flip state
+- **Background**: Draw canvas background color as first layer (fixes black screen)
 
-### New: `src/lib/canvasRenderer.ts`
-- `renderSceneFrame(components, svgEl, canvas, frameIndex, fps)` — the core per-frame render function
-- Clones SVG, removes foreignObjects, serializes, draws to canvas
-- Manages offscreen lottie-web canvas renderers for each walking character
-- Handles position/scale/flip for each character
+### Step 5: Fix animation playback regression
+- Verify `animateWalkingCharacter` in `timelineEngine.ts` still correctly calls `__lottiePlay`/`__lottieStop`
+- Ensure `setupDeterministicControls` replaces DOM controls BEFORE `buildTimeline` is called
+- The Lottie frame calculation (`elapsed * frameRate % totalFrames`) needs to correctly sync with the timeline seek position
 
-### Edit: `src/lib/canvasExport.ts`
-- Remove `html2canvas` import and all html2canvas usage
-- Rewrite `exportMP4` to use the new `renderSceneFrame` approach
-- Keep `MediaRecorder` + `captureStream` for encoding (this part works fine)
-- Keep `exportPDF` as-is (static snapshot is fine with SVG serialization)
-
-### Edit: `package.json`
-- Remove `html2canvas` dependency (no longer needed)
+### Step 6: Keep PDF/JPG export working
+- PDF export via jsPDF stays as-is (already works)
+- Add JPG/PNG still export option using the same canvas renderer
 
 ## Technical Details
 
-- **SVG rendering**: `XMLSerializer` + `Blob` + `Image.onload` + `ctx.drawImage` — same proven approach already used in `svgToCanvas` for PDF export
-- **Lottie canvas rendering**: `lottie-web` supports `renderer: 'canvas'` mode which draws directly to a canvas context — no DOM needed
-- **Positioning**: Each component's `x, y, width, height` from the store maps directly to `drawImage` coordinates on the offscreen canvas
-- **Timeline sync**: The animation timeline (GSAP) still runs normally; we just sample the visual state each frame
-- **No CORS/viewport issues**: Everything is rendered programmatically from data, not screenshotted from the DOM
+**WebCodecs encoding (core logic):**
+```typescript
+import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
+
+const muxer = new Muxer({
+  target: new ArrayBufferTarget(),
+  video: { codec: 'avc', width: 1920, height: 1080 },
+  fastStart: 'in-memory',
+});
+
+const encoder = new VideoEncoder({
+  output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+  error: (e) => console.error(e),
+});
+
+encoder.configure({
+  codec: 'avc1.42001f',
+  width: 1920, height: 1080,
+  bitrate: 5_000_000,
+  framerate: 30,
+});
+
+// For each frame:
+const frame = new VideoFrame(canvas, {
+  timestamp: frameNumber * (1_000_000 / 30), // microseconds
+});
+encoder.encode(frame, { keyFrame: frameNumber % 30 === 0 });
+frame.close();
+
+await encoder.flush();
+muxer.finalize();
+// Download muxer.target.buffer as .mp4
+```
+
+**Browser support**: WebCodecs is supported in Chrome 94+, Edge 94+, Opera 80+. Safari 16.4+ has partial support. For unsupported browsers, we show a clear error message.
+
+**Performance**: No real-time waiting. A 3-second animation at 30fps = 90 frames, encodes in ~1-3 seconds total.
+
+## Files Changed
+1. **Delete** `src/lib/ffmpegEncoder.ts`
+2. **Rewrite** `src/lib/canvasExport.ts` — WebCodecs + mp4-muxer pipeline
+3. **Fix** `src/lib/canvasRenderer.ts` — proper SVG style inlining, background drawing, Lottie compositing
+4. **Verify** `src/timeline/timelineEngine.ts` — ensure animation logic is intact
+5. **Update** `package.json` — remove ffmpeg packages, add mp4-muxer
 
