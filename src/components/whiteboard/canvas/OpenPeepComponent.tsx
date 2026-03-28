@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import { applyCharacterAnimation, CharacterAnimation } from '@/lib/characterAnimations';
 
 // Direct ESM imports of individual Open Peeps parts
 import ExplainingBody from '@opeepsfun/open-peeps/build/body/effigy/Explaining';
@@ -89,7 +88,7 @@ interface Props {
 }
 
 const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown }) => {
-  const { x, y, scale = 0.3, variant = 'explaining', animation = 'idle' } = component.props;
+  const { x, y, scale = 0.3, variant = 'explaining' } = component.props;
   const preset = PEEP_PRESETS[variant] || PEEP_PRESETS.explaining;
   const isCustom = !!preset.CustomComponent;
 
@@ -99,21 +98,6 @@ const OpenPeepComponent: React.FC<Props> = ({ component, isSelected, onMouseDown
 
   const width = (isCustom ? 240 : 940) * scale;
   const height = (isCustom ? 324 : 1130) * scale;
-
-  // Apply character animation
-  useEffect(() => {
-    if (isCustom) return;
-
-    const animTl = applyCharacterAnimation(animation as CharacterAnimation, {
-      mouthEl: faceGroupRef.current,
-      headEl: headGroupRef.current,
-      bodyEl: bodyGroupRef.current,
-    });
-
-    return () => {
-      animTl?.kill();
-    };
-  }, [animation, isCustom, variant]);
 
   return (
     <g
