@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { LottiePlayer as Lottie } from 'lottie-react';
+import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
