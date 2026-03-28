@@ -294,7 +294,7 @@ const Canvas: React.FC = () => {
       </div>
 
       {/* Color picker for highlight or title */}
-      {selectedComp && (selectedComp.type === 'highlight' || selectedComp.type === 'title') && (
+      {selectedComp && (selectedComp.type === 'highlight' || selectedComp.type === 'title' || selectedComp.type === 'content') && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
           <span className="text-xs text-muted-foreground font-medium">Color:</span>
           {(selectedComp.type === 'title' ? TITLE_COLORS : HIGHLIGHT_COLORS).map((color) => (
