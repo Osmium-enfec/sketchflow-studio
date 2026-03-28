@@ -183,7 +183,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown' || comp.type === 'lottieCharacter') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -685,6 +685,17 @@ const Canvas: React.FC = () => {
                       setEditPos(null);
                       setEditField('text');
                     }}
+                  />
+                );
+              }
+              if (comp.type === 'lottieCharacter') {
+                return (
+                  <LottieCharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
               }
