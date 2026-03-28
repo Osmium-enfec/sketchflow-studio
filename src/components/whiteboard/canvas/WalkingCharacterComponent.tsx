@@ -74,7 +74,7 @@ const WalkingCharacterComponent: React.FC<Props> = ({ component, isSelected, onM
         onMouseDown={onMouseDown}
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
-        <WalkingInner width={width} height={height} flipped={flipped} animationData={variantData.data} />
+        <WalkingInner width={width} height={height} flipped={flipped} facesRight={variantData.facesRight} animationData={variantData.data} />
       </foreignObject>
 
       {isSelected && (
