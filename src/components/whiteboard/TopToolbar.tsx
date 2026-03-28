@@ -12,12 +12,15 @@ const TopToolbar: React.FC = () => {
   const [docsOpen, setDocsOpen] = useState(false);
   const [canvasOpen, setCanvasOpen] = useState(false);
   const [docSubOpen, setDocSubOpen] = useState(false);
+  const [textOpen, setTextOpen] = useState(false);
+  const [mdSubOpen, setMdSubOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<HTMLDivElement>(null);
   const docsRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -27,6 +30,7 @@ const TopToolbar: React.FC = () => {
       if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
       if (docsRef.current && !docsRef.current.contains(e.target as Node)) setDocsOpen(false);
       if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) { setCanvasOpen(false); setDocSubOpen(false); }
+      if (textRef.current && !textRef.current.contains(e.target as Node)) { setTextOpen(false); setMdSubOpen(false); }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
