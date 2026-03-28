@@ -297,17 +297,28 @@ const Canvas: React.FC = () => {
       {selectedComp && (selectedComp.type === 'highlight' || selectedComp.type === 'title' || selectedComp.type === 'content') && (
         <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
           <span className="text-xs text-muted-foreground font-medium">Color:</span>
-          {(selectedComp.type === 'title' ? TITLE_COLORS : HIGHLIGHT_COLORS).map((color) => (
+          {((selectedComp.type === 'title' || selectedComp.type === 'content') ? TITLE_COLORS : HIGHLIGHT_COLORS).map((color) => (
             <button
               key={color}
               onClick={() => updateComponentProps(selectedComp.id, { color })}
               className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
               style={{
                 backgroundColor: color,
-                borderColor: (selectedComp.props.color || (selectedComp.type === 'title' ? TITLE_COLORS[0] : HIGHLIGHT_COLORS[0])) === color ? 'hsl(0 0% 7%)' : 'transparent',
+                borderColor: (selectedComp.props.color || TITLE_COLORS[0]) === color ? 'hsl(0 0% 7%)' : 'transparent',
               }}
             />
           ))}
+          {selectedComp.type === 'content' && (
+            <>
+              <div className="h-5 w-px bg-border mx-1" />
+              <span className="text-xs text-muted-foreground font-medium">Width:</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { width: Math.max(150, (selectedComp.props.width || 500) - 50) })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">−</button>
+              <span className="text-xs text-muted-foreground min-w-[3rem] text-center">{selectedComp.props.width || 500}px</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { width: (selectedComp.props.width || 500) + 50 })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">+</button>
+            </>
+          )}
         </div>
       )}
 
