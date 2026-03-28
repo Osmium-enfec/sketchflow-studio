@@ -1,5 +1,6 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useLottie } from 'lottie-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData, getLottieUrl, LOTTIE_PRESETS } from '@/lib/lottiePresets';
 
@@ -14,7 +15,8 @@ interface Props {
   onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
 
-const LottieInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
+/** Renders JSON-based Lottie animations */
+const LottieJsonInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
   const { View, goToAndStop, play, stop, setSpeed } = useLottie({
     animationData,
     loop: true,
@@ -38,6 +40,38 @@ const LottieInner: React.FC<{ animationData: any; width: number; height: number 
   return (
     <div ref={containerRef} data-lottie-control="true" style={{ width, height, pointerEvents: 'all' }}>
       {View}
+    </div>
+  );
+};
+
+/** Renders .lottie (dotLottie) format animations */
+const DotLottieInner: React.FC<{ src: string; width: number; height: number }> = ({ src, width, height }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dotLottieRef = useRef<any>(null);
+
+  const dotLottieRefCallback = useCallback((dotLottie: any) => {
+    if (!dotLottie) return;
+    dotLottieRef.current = dotLottie;
+    dotLottie.pause();
+    
+    const el = containerRef.current;
+    if (el) {
+      (el as any).__lottiePlay = () => dotLottie.play();
+      (el as any).__lottieStop = () => dotLottie.pause();
+      (el as any).__lottieGoTo = (frame: number) => { dotLottie.setFrame(frame); };
+      (el as any).__lottieSetSpeed = (speed: number) => { dotLottie.setSpeed(speed); };
+    }
+  }, []);
+
+  return (
+    <div ref={containerRef} data-lottie-control="true" style={{ width, height, pointerEvents: 'all' }}>
+      <DotLottieReact
+        src={src}
+        loop
+        autoplay={false}
+        dotLottieRefCallback={dotLottieRefCallback}
+        style={{ width: '100%', height: '100%' }}
+      />
     </div>
   );
 };
