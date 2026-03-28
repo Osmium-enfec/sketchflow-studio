@@ -20,7 +20,7 @@ const DURATION: Record<string, number> = {
   noteBox: 1.5,
   docCodeBlock: 1.8,
   markdown: 1.5,
-  
+  walkingCharacter: 3.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -482,7 +482,7 @@ const animators: Record<string, AnimatorFn> = {
   noteBox: animateNoteBox,
   docCodeBlock: animateDocCodeBlock,
   markdown: animateMarkdown,
-  
+  walkingCharacter: animateWalkingCharacter,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
