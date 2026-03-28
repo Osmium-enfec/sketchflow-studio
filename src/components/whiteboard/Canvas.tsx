@@ -14,6 +14,7 @@ import CodeBoxComponent from './canvas/CodeBoxComponent';
 import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
+import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -158,7 +159,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
