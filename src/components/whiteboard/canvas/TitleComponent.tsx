@@ -25,8 +25,11 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
 
   const renderedHTML = useMemo(() => {
     if (!hasMarkdown) return '';
+    if (isContentType) {
+      return marked.parse(text || '', { breaks: true, gfm: true }) as string;
+    }
     return marked.parseInline(text || '', { breaks: true, gfm: true }) as string;
-  }, [text, hasMarkdown]);
+  }, [text, hasMarkdown, isContentType]);
 
   useEffect(() => {
     if (!hasMarkdown && textRef.current) {
@@ -35,9 +38,11 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
     }
   }, [text, fontSize, hasMarkdown]);
 
-  // Estimate dimensions for markdown rendered title
-  const mdWidth = useMemo(() => Math.max(200, (text || '').length * fontSize * 0.55), [text, fontSize]);
-  const mdHeight = useMemo(() => fontSize * 1.6, [fontSize]);
+  // Estimate dimensions for markdown rendered content
+  const contentWidth = component.props.width || 500;
+  const lineCount = isContentType ? Math.max(3, (text || '').split('\n').length) : 1;
+  const mdWidth = isContentType ? contentWidth : Math.max(200, (text || '').length * fontSize * 0.55);
+  const mdHeight = isContentType ? Math.max(80, lineCount * fontSize * 1.4 + 40) : fontSize * 1.6;
 
   const selWidth = hasMarkdown ? mdWidth : bbox.width;
   const selHeight = hasMarkdown ? mdHeight : bbox.height;
@@ -69,12 +74,13 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
             ref={foreignRef}
             className="title-text markdown-rendered"
             style={{
-              fontFamily: "'Patrick Hand', cursive",
-              fontSize: `${fontSize}px`,
+              fontFamily: isContentType ? "'Inter', sans-serif" : "'Patrick Hand', cursive",
+              fontSize: isContentType ? `${Math.round(fontSize * 0.45)}px` : `${fontSize}px`,
               color: component.props.color || 'hsl(220 15% 20%)',
               userSelect: 'none',
-              lineHeight: 1.3,
-              whiteSpace: 'nowrap',
+              lineHeight: 1.5,
+              whiteSpace: isContentType ? 'normal' : 'nowrap',
+              overflow: 'hidden',
             }}
             data-full-text={text}
             dangerouslySetInnerHTML={{ __html: renderedHTML }}

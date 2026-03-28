@@ -113,6 +113,12 @@ const Canvas: React.FC = () => {
           y: comp.props.y * scaleY + rect.top,
           width: comp.props.width * scaleX,
         });
+      } else if (comp.type === 'content') {
+        setEditPos({
+          x: comp.props.x * scaleX + rect.left,
+          y: comp.props.y * scaleY + rect.top,
+          width: (comp.props.width || 500) * scaleX,
+        });
       } else {
         setEditPos({
           x: comp.props.x * scaleX + rect.left - 10,
@@ -329,12 +335,13 @@ const Canvas: React.FC = () => {
             const editComp = components.find(c => c.id === editingId);
             const isDarkComp = editComp?.props?.variant === 'dark';
             const isCodeField = editField === 'codeContent';
+            const isContentType = editComp?.type === 'content';
             const isCodeOrNote = editComp?.type === 'docCodeBlock' || editComp?.type === 'noteBox';
             const bgColor = isCodeOrNote && isDarkComp ? '#0b2e1f' : isCodeOrNote ? '#f8faf9' : undefined;
             const textColor = isCodeOrNote && isDarkComp ? '#e2e8f0' : isCodeOrNote ? '#1e293b' : undefined;
             const borderColor = isCodeOrNote && isDarkComp ? '#0C4B33' : undefined;
 
-            return isCodeField ? (
+            return (isCodeField || isContentType) ? (
               <textarea
                 autoFocus
                 value={editText}
