@@ -17,6 +17,8 @@ import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
+import { exportPDF, exportMP4 } from '@/lib/canvasExport';
+import { toast } from 'sonner';
 
 const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
 const NOTE_SWATCH_COLORS: Record<string, string> = {
@@ -229,14 +231,45 @@ const Canvas: React.FC = () => {
   const selectedComp = components.find((c) => c.id === selectedId);
 
   useEffect(() => {
-    const handler = () => {
+    const handlePlay = () => {
       if (svgRef.current) {
         playAnimation(svgRef.current, useWhiteboardStore.getState().components);
       }
     };
-    window.addEventListener('whiteboard-play', handler);
-    return () => window.removeEventListener('whiteboard-play', handler);
-  }, []);
+    const handlePDF = () => {
+      if (svgRef.current) {
+        toast.promise(exportPDF(svgRef.current, CANVAS_W, CANVAS_H), {
+          loading: 'Generating PDF...',
+          success: 'PDF downloaded!',
+          error: 'Failed to export PDF',
+        });
+      }
+    };
+    const handleMP4 = () => {
+      if (svgRef.current) {
+        toast.promise(
+          exportMP4(svgRef.current, CANVAS_W, CANVAS_H, () => {
+            if (svgRef.current) {
+              playAnimation(svgRef.current, useWhiteboardStore.getState().components);
+            }
+          }),
+          {
+            loading: 'Recording animation... (will download when complete)',
+            success: 'Recording downloaded!',
+            error: 'Failed to record animation',
+          }
+        );
+      }
+    };
+    window.addEventListener('whiteboard-play', handlePlay);
+    window.addEventListener('whiteboard-export-pdf', handlePDF);
+    window.addEventListener('whiteboard-export-mp4', handleMP4);
+    return () => {
+      window.removeEventListener('whiteboard-play', handlePlay);
+      window.removeEventListener('whiteboard-export-pdf', handlePDF);
+      window.removeEventListener('whiteboard-export-mp4', handleMP4);
+    };
+  }, [CANVAS_W, CANVAS_H]);
 
   return (
     <div className="flex-1 relative overflow-hidden bg-muted/30">
