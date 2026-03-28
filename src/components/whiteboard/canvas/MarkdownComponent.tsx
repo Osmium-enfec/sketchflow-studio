@@ -104,7 +104,7 @@ const MarkdownComponent: React.FC<Props> = ({
                 lineHeight: '1.6',
                 overflow: 'hidden',
               }}
-              className="markdown-rendered"
+              className={`markdown-rendered${isDark ? ' markdown-dark' : ''}`}
               dangerouslySetInnerHTML={{ __html: renderedHTML }}
             />
           )}
