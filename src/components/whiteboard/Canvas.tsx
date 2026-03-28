@@ -43,7 +43,10 @@ const TITLE_COLORS = [
 ];
 
 const Canvas: React.FC = () => {
-  const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps } = useWhiteboardStore();
+  const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps, canvasType } = useWhiteboardStore();
+  const preset = CANVAS_PRESETS[canvasType];
+  const CANVAS_W = preset.w;
+  const CANVAS_H = preset.h;
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
