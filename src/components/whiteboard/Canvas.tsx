@@ -194,9 +194,19 @@ const Canvas: React.FC = () => {
           }
           updateComponentProps(id, newProps);
         } else if (comp.type === 'content') {
-          if (handle === 'e') {
-            updateComponentProps(id, { width: Math.max(150, startProps.width + dx) });
+          let newProps: any = {};
+          if (handle === 'se') {
+            newProps = { width: Math.max(150, startProps.width + dx), height: Math.max(40, (startProps.height || 100) + dy) };
+          } else if (handle === 'sw') {
+            newProps = { x: startProps.x + dx, width: Math.max(150, startProps.width - dx), height: Math.max(40, (startProps.height || 100) + dy) };
+          } else if (handle === 'ne') {
+            newProps = { y: startProps.y + dy, width: Math.max(150, startProps.width + dx), height: Math.max(40, (startProps.height || 100) - dy) };
+          } else if (handle === 'nw') {
+            newProps = { x: startProps.x + dx, y: startProps.y + dy, width: Math.max(150, startProps.width - dx), height: Math.max(40, (startProps.height || 100) - dy) };
+          } else if (handle === 'e') {
+            newProps = { width: Math.max(150, startProps.width + dx) };
           }
+          updateComponentProps(id, newProps);
         } else if (comp.type === 'highlight') {
           if (handle === 'e') {
             updateComponentProps(id, { width: Math.max(30, startProps.width + dx) });
