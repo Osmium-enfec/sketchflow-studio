@@ -15,7 +15,13 @@ import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
+import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
+
+const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
+const NOTE_SWATCH_COLORS: Record<string, string> = {
+  green: '#16a34a', blue: '#2563eb', yellow: '#ca8a04', red: '#dc2626', purple: '#9333ea',
+};
 
 // A4 at 150 DPI ≈ 1240 × 1754
 const CANVAS_PRESETS = {
