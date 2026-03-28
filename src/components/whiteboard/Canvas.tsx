@@ -16,6 +16,7 @@ import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import MarkdownComponent from './canvas/MarkdownComponent';
+import WalkingCharacterComponent from './canvas/WalkingCharacterComponent';
 
 import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
@@ -183,7 +184,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown' || comp.type === 'walkingCharacter') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -381,6 +382,43 @@ const Canvas: React.FC = () => {
         </div>
       )}
 
+      {/* Walking character controls */}
+      {selectedComp && selectedComp.type === 'walkingCharacter' && (
+        <div className="absolute top-3 left-3 z-10 bg-card border rounded-lg shadow-sm p-3 flex flex-col gap-2 min-w-[220px]">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Direction:</span>
+            <button
+              onClick={() => updateComponentProps(selectedComp.id, { flipped: false })}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                !selectedComp.props.flipped ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              → Right
+            </button>
+            <button
+              onClick={() => updateComponentProps(selectedComp.id, { flipped: true })}
+              className={`px-2 py-1 text-xs rounded transition-colors ${
+                selectedComp.props.flipped ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
+              }`}
+            >
+              ← Left
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">Walk distance:</span>
+            <input
+              type="range"
+              min="0"
+              max="800"
+              step="10"
+              value={selectedComp.props.walkDistance || 200}
+              onChange={(e) => updateComponentProps(selectedComp.id, { walkDistance: Number(e.target.value) })}
+              className="flex-1 h-1.5 accent-primary"
+            />
+            <span className="text-xs text-muted-foreground w-8 text-right">{selectedComp.props.walkDistance || 200}px</span>
+          </div>
+        </div>
+      )}
 
       {/* Inline text editor overlay (skip for docCodeBlock which has its own inline editor) */}
       {editingId && editPos && (() => { const ec = components.find(c => c.id === editingId); return ec?.type !== 'docCodeBlock'; })() && (
@@ -686,6 +724,17 @@ const Canvas: React.FC = () => {
                       setEditPos(null);
                       setEditField('text');
                     }}
+                  />
+                );
+              }
+              if (comp.type === 'walkingCharacter') {
+                return (
+                  <WalkingCharacterComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
               }

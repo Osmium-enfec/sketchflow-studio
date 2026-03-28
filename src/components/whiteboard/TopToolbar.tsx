@@ -282,6 +282,12 @@ const TopToolbar: React.FC = () => {
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
               </button>
               <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Walking</div>
+              <button onClick={() => { addComponent('walkingCharacter'); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Female Walking
+              </button>
+              <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>
               <button onClick={() => { addComponent('device', { variant: 'phone' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">

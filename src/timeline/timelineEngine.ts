@@ -20,7 +20,7 @@ const DURATION: Record<string, number> = {
   noteBox: 1.5,
   docCodeBlock: 1.8,
   markdown: 1.5,
-  
+  walkingCharacter: 3.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -461,6 +461,45 @@ function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
 }
 
 
+function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const foreignObj = el.querySelector('foreignObject');
+  const walkDistance = Number(el.getAttribute('data-walk-distance') || 200);
+  const flipped = el.getAttribute('data-walk-flipped') === '1';
+  const direction = flipped ? -1 : 1;
+
+  if (foreignObj) {
+    gsap.set(foreignObj, { opacity: 0 });
+    tl.to(foreignObj, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 0);
+  }
+
+  // Start lottie playback
+  tl.call(() => {
+    const controlEl = el.querySelector('[data-lottie-control]') as any;
+    if (controlEl?.__lottiePlay) controlEl.__lottiePlay();
+  }, [], 0.2);
+
+  // Walk the character across the distance
+  if (foreignObj && walkDistance > 0) {
+    tl.to(foreignObj, {
+      attr: { x: `+=${walkDistance * direction}` },
+      duration: 2.5,
+      ease: 'none',
+    }, 0.3);
+    // Move selection rect too
+    const rect = el.querySelector('rect');
+    if (rect) {
+      tl.to(rect, {
+        attr: { x: `+=${walkDistance * direction}` },
+        duration: 2.5,
+        ease: 'none',
+      }, 0.3);
+    }
+  }
+
+  return tl;
+}
+
 // Animators that need component data use a wrapper
 type AnimatorFn = (el: SVGGElement, comp?: WhiteboardComponent) => gsap.core.Timeline;
 
@@ -482,7 +521,7 @@ const animators: Record<string, AnimatorFn> = {
   noteBox: animateNoteBox,
   docCodeBlock: animateDocCodeBlock,
   markdown: animateMarkdown,
-  
+  walkingCharacter: animateWalkingCharacter,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
