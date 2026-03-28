@@ -8,12 +8,14 @@ export interface LottieVariant {
   data: any;
   /** Whether this animation moves across the canvas */
   translates: boolean;
+  /** Whether the source animation naturally faces right */
+  facesRight: boolean;
 }
 
 export const LOTTIE_VARIANTS: LottieVariant[] = [
-  { key: 'femaleWalking', label: 'Female Walking', data: femaleWalkingData, translates: true },
-  { key: 'maleWalking', label: 'Male Walking', data: maleWalkingData, translates: true },
-  { key: 'maleWalking2', label: 'Male Walking 2', data: maleWalking2Data, translates: true },
+  { key: 'femaleWalking', label: 'Female Walking', data: femaleWalkingData, translates: true, facesRight: false },
+  { key: 'maleWalking', label: 'Male Walking', data: maleWalkingData, translates: true, facesRight: true },
+  { key: 'maleWalking2', label: 'Male Walking 2', data: maleWalking2Data, translates: true, facesRight: true },
 ];
 
 export function getVariantData(key: string): LottieVariant {
