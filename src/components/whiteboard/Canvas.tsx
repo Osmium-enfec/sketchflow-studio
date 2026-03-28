@@ -17,8 +17,12 @@ import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
+// A4 at 150 DPI ≈ 1240 × 1754
+const CANVAS_PRESETS = {
+  'whiteboard': { w: 1920, h: 1080, bg: 'hsl(43 100% 98%)', grid: true, gridColor: 'hsl(0 0% 85%)' },
+  'doc-white': { w: 1240, h: 1754, bg: '#ffffff', grid: false, gridColor: 'transparent' },
+  'doc-dark': { w: 1240, h: 1754, bg: '#1a1a2e', grid: false, gridColor: 'transparent' },
+} as const;
 
 const HIGHLIGHT_COLORS = [
   'hsl(48 100% 67%)',   // yellow
