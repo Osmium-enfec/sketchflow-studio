@@ -60,9 +60,11 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
   }, [isContentType, text, fontSize, component.props.width, renderedHTML]);
 
   const contentWidth = component.props.width || 500;
+  const contentHeight = component.props.height;
   const mdWidth = isContentType ? contentWidth : Math.max(200, (text || '').length * fontSize * 0.55);
+  const autoHeight = Math.max(40, measuredHeight || 40);
   const mdHeight = isContentType
-    ? Math.max(40, measuredHeight || 40)
+    ? (contentHeight ? Math.max(40, contentHeight) : autoHeight)
     : fontSize * 1.6;
 
   const selWidth = hasMarkdown ? mdWidth : bbox.width;
@@ -88,21 +90,30 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
             strokeDasharray="6 3"
             rx="4"
           />
-          {/* Width resize handle on right edge for content */}
-          {isContentType && onResizeStart && (
-            <rect
-              x={x + contentWidth - 5}
-              y={y + mdHeight / 2 - 12}
-              width={10}
-              height={24}
-              rx={3}
-              fill="white"
-              stroke="hsl(210 80% 60%)"
-              strokeWidth={2}
-              style={{ cursor: 'ew-resize' }}
-              onMouseDown={(e) => { e.stopPropagation(); onResizeStart(e, 'e'); }}
-            />
-          )}
+          {/* Corner and edge resize handles for content */}
+          {isContentType && onResizeStart && (() => {
+            const handles: { key: string; cx: number; cy: number; cursor: string }[] = [
+              { key: 'nw', cx: x, cy: y, cursor: 'nw-resize' },
+              { key: 'ne', cx: x + contentWidth, cy: y, cursor: 'ne-resize' },
+              { key: 'sw', cx: x, cy: y + mdHeight, cursor: 'sw-resize' },
+              { key: 'se', cx: x + contentWidth, cy: y + mdHeight, cursor: 'se-resize' },
+            ];
+            return handles.map((h) => (
+              <rect
+                key={h.key}
+                x={h.cx - 5}
+                y={h.cy - 5}
+                width={10}
+                height={10}
+                rx={2}
+                fill="white"
+                stroke="hsl(210 80% 60%)"
+                strokeWidth={2}
+                style={{ cursor: h.cursor }}
+                onMouseDown={(e) => { e.stopPropagation(); onResizeStart!(e, h.key); }}
+              />
+            ));
+          })()}
         </>
       )}
 

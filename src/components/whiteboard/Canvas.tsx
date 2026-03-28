@@ -194,9 +194,19 @@ const Canvas: React.FC = () => {
           }
           updateComponentProps(id, newProps);
         } else if (comp.type === 'content') {
-          if (handle === 'e') {
-            updateComponentProps(id, { width: Math.max(150, startProps.width + dx) });
+          let newProps: any = {};
+          if (handle === 'se') {
+            newProps = { width: Math.max(150, startProps.width + dx), height: Math.max(40, (startProps.height || 100) + dy) };
+          } else if (handle === 'sw') {
+            newProps = { x: startProps.x + dx, width: Math.max(150, startProps.width - dx), height: Math.max(40, (startProps.height || 100) + dy) };
+          } else if (handle === 'ne') {
+            newProps = { y: startProps.y + dy, width: Math.max(150, startProps.width + dx), height: Math.max(40, (startProps.height || 100) - dy) };
+          } else if (handle === 'nw') {
+            newProps = { x: startProps.x + dx, y: startProps.y + dy, width: Math.max(150, startProps.width - dx), height: Math.max(40, (startProps.height || 100) - dy) };
+          } else if (handle === 'e') {
+            newProps = { width: Math.max(150, startProps.width + dx) };
           }
+          updateComponentProps(id, newProps);
         } else if (comp.type === 'highlight') {
           if (handle === 'e') {
             updateComponentProps(id, { width: Math.max(30, startProps.width + dx) });
@@ -311,12 +321,21 @@ const Canvas: React.FC = () => {
           {selectedComp.type === 'content' && (
             <>
               <div className="h-5 w-px bg-border mx-1" />
-              <span className="text-xs text-muted-foreground font-medium">Width:</span>
+              <span className="text-xs text-muted-foreground font-medium">W:</span>
               <button onClick={() => updateComponentProps(selectedComp.id, { width: Math.max(150, (selectedComp.props.width || 500) - 50) })}
                 className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">−</button>
-              <span className="text-xs text-muted-foreground min-w-[3rem] text-center">{selectedComp.props.width || 500}px</span>
+              <span className="text-xs text-muted-foreground min-w-[2.5rem] text-center">{selectedComp.props.width || 500}</span>
               <button onClick={() => updateComponentProps(selectedComp.id, { width: (selectedComp.props.width || 500) + 50 })}
                 className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">+</button>
+              <div className="h-5 w-px bg-border mx-1" />
+              <span className="text-xs text-muted-foreground font-medium">H:</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: Math.max(40, (selectedComp.props.height || 100) - 30) })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">−</button>
+              <span className="text-xs text-muted-foreground min-w-[2.5rem] text-center">{selectedComp.props.height || 'auto'}</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: (selectedComp.props.height || 100) + 30 })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">+</button>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: undefined })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border text-muted-foreground">Auto</button>
             </>
           )}
         </div>
