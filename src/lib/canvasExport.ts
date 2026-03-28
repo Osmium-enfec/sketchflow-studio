@@ -98,20 +98,19 @@ export const exportMP4 = (
 
     recorder.onerror = (e) => reject(e);
     
-    // Find the parent container that holds the SVG (the actual rendered DOM element)
-    const svgContainer = svgEl.closest('.whiteboard-canvas-container') || svgEl.parentElement;
+    // Target the SVG's direct parent div (the sized container)
+    const svgWrapper = svgEl.parentElement as HTMLElement;
     
     recorder.start();
     onStart();
     
     let capturing = true;
     let lastCaptureTime = 0;
-    const CAPTURE_INTERVAL = 66; // ~15fps to avoid lag
+    const CAPTURE_INTERVAL = 66; // ~15fps
 
     const captureFrame = async (timestamp: number) => {
       if (!capturing) return;
       
-      // Throttle: only capture every ~66ms (15fps)
       if (timestamp - lastCaptureTime < CAPTURE_INTERVAL) {
         requestAnimationFrame(captureFrame);
         return;
@@ -119,18 +118,26 @@ export const exportMP4 = (
       lastCaptureTime = timestamp;
 
       try {
-        const captureTarget = svgContainer || svgEl;
-        const snapshot = await html2canvas(captureTarget as HTMLElement, {
-          width: canvasW,
-          height: canvasH,
-          scale: 1,
+        const target = svgWrapper || svgEl;
+        const rect = target.getBoundingClientRect();
+        
+        const snapshot = await html2canvas(target as HTMLElement, {
+          width: rect.width,
+          height: rect.height,
+          scale: canvasW / rect.width, // Scale up to full canvas resolution
           useCORS: true,
           allowTaint: true,
-          backgroundColor: null,
+          backgroundColor: '#ffffff',
           logging: false,
           foreignObjectRendering: true,
           imageTimeout: 0,
           removeContainer: true,
+          x: 0,
+          y: 0,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: rect.width,
+          windowHeight: rect.height,
         });
         ctx.clearRect(0, 0, canvasW, canvasH);
         ctx.drawImage(snapshot, 0, 0, canvasW, canvasH);
