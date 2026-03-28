@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { marked } from 'marked';
 
 interface Props {
   component: WhiteboardComponent;
@@ -12,14 +13,32 @@ interface Props {
 const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
   const { text, x, y, fontSize = 42 } = component.props;
   const textRef = useRef<SVGTextElement>(null);
+  const foreignRef = useRef<HTMLDivElement>(null);
   const [bbox, setBbox] = React.useState({ width: 0, height: 0 });
 
+  // Check if text contains markdown syntax
+  const hasMarkdown = useMemo(() => {
+    return /[*_#`~\[\]!>|-]/.test(text || '');
+  }, [text]);
+
+  const renderedHTML = useMemo(() => {
+    if (!hasMarkdown) return '';
+    return marked.parseInline(text || '', { breaks: true, gfm: true }) as string;
+  }, [text, hasMarkdown]);
+
   useEffect(() => {
-    if (textRef.current) {
+    if (!hasMarkdown && textRef.current) {
       const b = textRef.current.getBBox();
       setBbox({ width: b.width, height: b.height });
     }
-  }, [text, fontSize]);
+  }, [text, fontSize, hasMarkdown]);
+
+  // Estimate dimensions for markdown rendered title
+  const mdWidth = useMemo(() => Math.max(200, (text || '').length * fontSize * 0.55), [text, fontSize]);
+  const mdHeight = useMemo(() => fontSize * 1.6, [fontSize]);
+
+  const selWidth = hasMarkdown ? mdWidth : bbox.width;
+  const selHeight = hasMarkdown ? mdHeight : bbox.height;
 
   return (
     <g
@@ -31,9 +50,9 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
       {isSelected && (
         <rect
           x={x - 10}
-          y={y - bbox.height - 5}
-          width={bbox.width + 20}
-          height={bbox.height + 15}
+          y={hasMarkdown ? y - 5 : y - selHeight - 5}
+          width={selWidth + 20}
+          height={selHeight + 15}
           fill="none"
           stroke="hsl(210 80% 70%)"
           strokeWidth="2"
@@ -41,19 +60,39 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
           rx="4"
         />
       )}
-      <text
-        ref={textRef}
-        x={x}
-        y={y}
-        className="title-text"
-        fontFamily="'Patrick Hand', cursive"
-        fontSize={fontSize}
-        fill={component.props.color || 'hsl(220 15% 20%)'}
-        data-full-text={text}
-        style={{ userSelect: 'none' }}
-      >
-        {text}
-      </text>
+
+      {hasMarkdown ? (
+        <foreignObject x={x} y={y} width={mdWidth} height={mdHeight}>
+          <div
+            ref={foreignRef}
+            className="title-text markdown-rendered"
+            style={{
+              fontFamily: "'Patrick Hand', cursive",
+              fontSize: `${fontSize}px`,
+              color: component.props.color || 'hsl(220 15% 20%)',
+              userSelect: 'none',
+              lineHeight: 1.3,
+              whiteSpace: 'nowrap',
+            }}
+            data-full-text={text}
+            dangerouslySetInnerHTML={{ __html: renderedHTML }}
+          />
+        </foreignObject>
+      ) : (
+        <text
+          ref={textRef}
+          x={x}
+          y={y}
+          className="title-text"
+          fontFamily="'Patrick Hand', cursive"
+          fontSize={fontSize}
+          fill={component.props.color || 'hsl(220 15% 20%)'}
+          data-full-text={text}
+          style={{ userSelect: 'none' }}
+        >
+          {text}
+        </text>
+      )}
     </g>
   );
 };

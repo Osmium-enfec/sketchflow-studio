@@ -17,6 +17,7 @@ const DURATION: Record<string, number> = {
   documentation: 2.0,
   noteBox: 1.5,
   docCodeBlock: 1.8,
+  markdown: 1.5,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -429,6 +430,22 @@ function animateDocCodeBlock(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+  const bg = el.querySelector('rect');
+  const foreignObj = el.querySelector('foreignObject');
+
+  if (bg) {
+    gsap.set(bg, { opacity: 0, scaleY: 0.9, transformOrigin: 'top center' });
+    tl.to(bg, { opacity: 1, scaleY: 1, duration: 0.4, ease: 'power2.out' }, 0);
+  }
+  if (foreignObj) {
+    gsap.set(foreignObj, { opacity: 0 });
+    tl.to(foreignObj, { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.3);
+  }
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
@@ -445,6 +462,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   documentation: animateDocumentation,
   noteBox: animateNoteBox,
   docCodeBlock: animateDocCodeBlock,
+  markdown: animateMarkdown,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
