@@ -460,7 +460,7 @@ function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
 
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
-  content: animateTitle,
+  content: animateContent,
   box: animateBox,
   arrow: animateArrow,
   highlight: animateHighlight,
