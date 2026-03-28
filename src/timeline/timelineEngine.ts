@@ -3,6 +3,7 @@ import { WhiteboardComponent } from '@/store/whiteboardStore';
 
 const DURATION: Record<string, number> = {
   title: 1.2,
+  content: 1.2,
   box: 1.5,
   arrow: 0.8,
   highlight: 0.6,
@@ -448,6 +449,7 @@ function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
 
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
+  content: animateTitle,
   box: animateBox,
   arrow: animateArrow,
   highlight: animateHighlight,
