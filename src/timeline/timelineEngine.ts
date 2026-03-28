@@ -466,6 +466,11 @@ function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
   const foreignObj = el.querySelector('foreignObject');
   const walkDistance = Number(el.getAttribute('data-walk-distance') || 200);
   const flipped = el.getAttribute('data-walk-flipped') === '1';
+  const translates = el.getAttribute('data-walk-translates') !== '0';
+  const facesRight = el.getAttribute('data-walk-faces-right') === '1';
+
+  // Direction: if facesRight, default moves right (+1), flipped moves left (-1)
+  // If !facesRight (faces left), we flip it to face right by default, so default moves right (+1), flipped moves left (-1)
   const direction = flipped ? -1 : 1;
 
   // Fade in (but ensure it stays visible after)
@@ -479,8 +484,8 @@ function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
     if (controlEl?.__lottiePlay) controlEl.__lottiePlay();
   }, [], 0);
 
-  // Walk the character across the distance
-  if (foreignObj && walkDistance > 0) {
+  // Only translate if the variant is a walking/running type
+  if (translates && foreignObj && walkDistance > 0) {
     const startX = Number(foreignObj.getAttribute('x') || 0);
     tl.to(foreignObj, {
       attr: { x: startX + walkDistance * direction },

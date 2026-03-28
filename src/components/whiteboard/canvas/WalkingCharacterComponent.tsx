@@ -65,7 +65,7 @@ const WalkingCharacterComponent: React.FC<Props> = ({ component, isSelected, onM
   };
 
   return (
-    <g data-component-id={component.id} data-walk-distance={walkDistance} data-walk-flipped={flipped ? '1' : '0'}>
+    <g data-component-id={component.id} data-walk-distance={walkDistance} data-walk-flipped={flipped ? '1' : '0'} data-walk-translates={variantData.translates ? '1' : '0'} data-walk-faces-right={variantData.facesRight ? '1' : '0'}>
       <foreignObject
         x={x}
         y={y}
