@@ -72,21 +72,32 @@ export const exportMP4 = async (
 ): Promise<void> => {
   const FPS = 30;
 
+  console.log('[exportMP4] Starting export', { canvasW, canvasH, componentCount: components.length });
+
   // 1. Setup offscreen renderer + lottie instances
   const renderer = new CanvasRenderer(canvasW, canvasH);
   renderer.initLottieInstances(components);
+  console.log('[exportMP4] Renderer initialized');
 
   // 2. Replace DOM lottie controls with deterministic state trackers
-  //    (must happen BEFORE building the timeline)
   renderer.setupDeterministicControls(svgEl, components);
 
   // 3. Build paused GSAP timeline
   const timeline = buildTimeline(svgEl, components);
   const duration = timeline.duration();
   const totalFrames = Math.ceil(duration * FPS) + 1;
+  console.log('[exportMP4] Timeline built', { duration, totalFrames });
+
+  if (duration <= 0 || totalFrames <= 0) {
+    renderer.destroy();
+    timeline.kill();
+    throw new Error('Timeline has no duration — nothing to export');
+  }
 
   // 4. Load FFmpeg.wasm (cached after first load)
+  console.log('[exportMP4] Loading FFmpeg...');
   const ffmpeg = await loadFFmpeg();
+  console.log('[exportMP4] FFmpeg loaded');
 
   // 5. Render each frame deterministically
   for (let f = 0; f < totalFrames; f++) {
@@ -94,18 +105,31 @@ export const exportMP4 = async (
     renderer.setCurrentTime(t);
     timeline.seek(t);
 
-    await renderer.renderFrame(svgEl);
+    try {
+      await renderer.renderFrame(svgEl);
+    } catch (err) {
+      console.error(`[exportMP4] Frame ${f} render failed:`, err);
+      continue;
+    }
 
     // Convert canvas to JPEG and write to FFmpeg virtual FS
-    const blob = await new Promise<Blob>((resolve) => {
-      renderer.getCanvas().toBlob((b) => resolve(b!), 'image/jpeg', 0.92);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      renderer.getCanvas().toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error(`Frame ${f}: toBlob returned null`));
+      }, 'image/jpeg', 0.92);
     });
     const data = new Uint8Array(await blob.arrayBuffer());
     await ffmpeg.writeFile(`f${String(f).padStart(5, '0')}.jpg`, data);
+    
+    if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames} written`);
   }
+  console.log('[exportMP4] All frames written, encoding...');
 
   // 6. Encode frames into H.264 MP4
-  await ffmpeg.exec([
+  console.log('[exportMP4] Starting FFmpeg encode...');
+  ffmpeg.on('log', ({ message }) => console.log('[ffmpeg]', message));
+  const exitCode = await ffmpeg.exec([
     '-framerate', String(FPS),
     '-i', 'f%05d.jpg',
     '-c:v', 'libx264',
@@ -114,6 +138,7 @@ export const exportMP4 = async (
     '-crf', '23',
     'output.mp4',
   ]);
+  console.log('[exportMP4] FFmpeg exit code:', exitCode);
 
   // 7. Download the MP4
   const output = await ffmpeg.readFile('output.mp4');
