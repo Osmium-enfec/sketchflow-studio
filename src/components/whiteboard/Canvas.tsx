@@ -113,6 +113,12 @@ const Canvas: React.FC = () => {
           y: comp.props.y * scaleY + rect.top,
           width: comp.props.width * scaleX,
         });
+      } else if (comp.type === 'content') {
+        setEditPos({
+          x: comp.props.x * scaleX + rect.left,
+          y: comp.props.y * scaleY + rect.top,
+          width: (comp.props.width || 500) * scaleX,
+        });
       } else {
         setEditPos({
           x: comp.props.x * scaleX + rect.left - 10,
