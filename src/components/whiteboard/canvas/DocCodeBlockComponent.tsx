@@ -144,11 +144,11 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
   const isDark = variant === 'dark';
   const scale = width / BASE_WIDTH;
 
-  const headerBg = isDark ? '#0C4B33' : '#ecfdf5';
-  const headerBorder = isDark ? '#0C4B33' : '#d1fae5';
+  const headerBg = isDark ? '#44B78B' : '#ecfdf5';
+  const headerBorder = isDark ? '#44B78B' : '#d1fae5';
   const bodyBg = isDark ? '#0f172a' : '#f8faf9';
   const bodyBorder = isDark ? '#1e293b' : '#e2e8f0';
-  const headerText = isDark ? '#a7f3d0' : '#475569';
+  const headerText = isDark ? '#0f2e1f' : '#475569';
   const copyIconColor = isDark ? '#64748b' : '#94a3b8';
   const lineNumColor = isDark ? '#475569' : '#cbd5e1';
 
