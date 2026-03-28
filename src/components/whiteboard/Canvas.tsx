@@ -20,6 +20,7 @@ import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
 import { toast } from 'sonner';
+import { CHARACTER_ANIMATIONS } from '@/lib/characterAnimations';
 
 const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
 const NOTE_SWATCH_COLORS: Record<string, string> = {
