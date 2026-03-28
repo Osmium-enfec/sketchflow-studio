@@ -254,8 +254,8 @@ const Canvas: React.FC = () => {
         </div>
       )}
 
-      {/* Inline text editor overlay */}
-      {editingId && editPos && (
+      {/* Inline text editor overlay (skip for docCodeBlock which has its own inline editor) */}
+      {editingId && editPos && (() => { const ec = components.find(c => c.id === editingId); return ec?.type !== 'docCodeBlock'; })() && (
         <div
           className="fixed z-50"
           style={{ left: editPos.x, top: editPos.y }}
