@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage } from 'lucide-react';
 import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -248,6 +248,28 @@ const TopToolbar: React.FC = () => {
             <Trash2 className="h-4 w-4" /> Delete
           </Button>
         )}
+        <div className="h-6 w-px bg-border" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('whiteboard-export-pdf'));
+          }}
+          className="gap-1.5"
+        >
+          <FileImage className="h-4 w-4" /> PDF
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('whiteboard-export-mp4'));
+          }}
+          className="gap-1.5"
+        >
+          <FileVideo className="h-4 w-4" /> Record
+        </Button>
+        <div className="h-6 w-px bg-border" />
         <Button
           size="sm"
           onClick={() => {
