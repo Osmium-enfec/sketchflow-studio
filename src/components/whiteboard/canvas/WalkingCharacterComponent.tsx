@@ -10,7 +10,10 @@ interface Props {
   onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
 
-const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean; animationData: any }> = ({ width, height, flipped, animationData }) => {
+const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean; facesRight: boolean; animationData: any }> = ({ width, height, flipped, facesRight, animationData }) => {
+  // If animation naturally faces right: default no flip, flipped = scaleX(-1)
+  // If animation naturally faces left: default scaleX(-1) to face right, flipped = no flip
+  const needsFlip = facesRight ? flipped : !flipped;
   const { View, goToAndStop, play, stop } = useLottie({
     animationData,
     loop: true,
@@ -18,7 +21,7 @@ const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean; 
     style: {
       width: '100%',
       height: '100%',
-      transform: flipped ? 'scaleX(1)' : 'scaleX(-1)',
+      transform: needsFlip ? 'scaleX(-1)' : 'scaleX(1)',
     },
   });
 
