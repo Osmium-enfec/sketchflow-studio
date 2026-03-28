@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import Lottie from 'lottie-react';
+import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
@@ -17,6 +17,16 @@ interface Props {
   onMouseDown: (e: React.MouseEvent) => void;
   onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
+
+const LottieInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
+  const { View } = useLottie({
+    animationData,
+    loop: true,
+    autoplay: true,
+    style: { width: '100%', height: '100%' },
+  });
+  return <div style={{ width, height, pointerEvents: 'all' }}>{View}</div>;
+};
 
 const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onResizeStart }) => {
   const { x, y, width = 300, height = 300, lottiePreset = 'bouncing' } = component.props;
@@ -40,14 +50,7 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
         onMouseDown={onMouseDown}
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
-        <div style={{ width, height, pointerEvents: 'all' }}>
-          <Lottie
-            animationData={animationData}
-            loop
-            autoplay
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
+        <LottieInner animationData={animationData} width={width} height={height} />
       </foreignObject>
 
       {isSelected && (
