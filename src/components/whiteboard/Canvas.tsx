@@ -275,9 +275,9 @@ const Canvas: React.FC = () => {
         toast.promise(
           exportMP4(svgRef.current, CANVAS_W, CANVAS_H, useWhiteboardStore.getState().components),
           {
-            loading: 'Exporting MP4… (loading encoder, rendering frames)',
+            loading: 'Encoding MP4… (rendering frames with WebCodecs)',
             success: 'MP4 exported successfully!',
-            error: 'Failed to export MP4',
+            error: (err) => `Export failed: ${err?.message || 'Unknown error'}`,
           }
         );
       }

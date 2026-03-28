@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { Muxer, ArrayBufferTarget } from 'mp4-muxer';
 import { CanvasRenderer } from './canvasRenderer';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { buildTimeline } from '@/timeline/timelineEngine';
@@ -49,18 +50,15 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 };
 
 /**
- * Wait for a specific duration using requestAnimationFrame for accuracy.
- */
-const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
-
-/**
- * Export animation as WebM video using deterministic frame-by-frame rendering + MediaRecorder.
+ * Export animation as MP4 using WebCodecs API + mp4-muxer.
  *
+ * Pipeline:
  * 1. Build a paused GSAP timeline
- * 2. Step through it frame-by-frame with timeline.seek()
+ * 2. Step through frame-by-frame with timeline.seek()
  * 3. At each frame, render SVG + Lottie to an offscreen canvas
- * 4. Use canvas.captureStream() + MediaRecorder to encode WebM
- * 5. Download the result
+ * 4. Create VideoFrame from canvas → encode with VideoEncoder (H.264)
+ * 5. Mux into MP4 container with mp4-muxer
+ * 6. Download the result
  */
 export const exportMP4 = async (
   svgEl: SVGSVGElement,
@@ -70,8 +68,18 @@ export const exportMP4 = async (
   fileName = 'whiteboard-animation',
 ): Promise<void> => {
   const FPS = 30;
+  const FRAME_DURATION_US = Math.round(1_000_000 / FPS); // microseconds per frame
+
+  // Check WebCodecs support
+  if (typeof VideoEncoder === 'undefined') {
+    throw new Error('WebCodecs API is not supported in this browser. Please use Chrome 94+ or Edge 94+.');
+  }
 
   console.log('[exportMP4] Starting export', { canvasW, canvasH, componentCount: components.length });
+
+  // Ensure dimensions are even (H.264 requirement)
+  const encoderW = canvasW % 2 === 0 ? canvasW : canvasW + 1;
+  const encoderH = canvasH % 2 === 0 ? canvasH : canvasH + 1;
 
   // 1. Setup offscreen renderer + lottie instances
   const renderer = new CanvasRenderer(canvasW, canvasH);
@@ -92,29 +100,44 @@ export const exportMP4 = async (
     throw new Error('Timeline has no duration — nothing to export');
   }
 
-  // 4. Setup MediaRecorder on the offscreen canvas stream
-  const canvas = renderer.getCanvas();
-  const stream = canvas.captureStream(0); // 0 = manual frame capture
-  
-  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-    ? 'video/webm;codecs=vp9'
-    : 'video/webm;codecs=vp8';
-  
-  const recorder = new MediaRecorder(stream, {
-    mimeType,
-    videoBitsPerSecond: 8_000_000,
+  // 4. Setup mp4-muxer
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: {
+      codec: 'avc',
+      width: encoderW,
+      height: encoderH,
+    },
+    fastStart: 'in-memory',
   });
 
-  const chunks: Blob[] = [];
-  recorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
-  };
+  // 5. Setup VideoEncoder
+  let encodeError: Error | null = null;
 
-  recorder.start();
-  console.log('[exportMP4] MediaRecorder started with', mimeType);
+  const encoder = new VideoEncoder({
+    output: (chunk, meta) => {
+      muxer.addVideoChunk(chunk, meta);
+    },
+    error: (e) => {
+      console.error('[exportMP4] Encoder error:', e);
+      encodeError = e;
+    },
+  });
 
-  // 5. Render each frame deterministically
+  encoder.configure({
+    codec: 'avc1.42001f', // H.264 Baseline Profile
+    width: encoderW,
+    height: encoderH,
+    bitrate: 5_000_000,
+    framerate: FPS,
+  });
+
+  console.log('[exportMP4] Encoder configured, starting frame rendering...');
+
+  // 6. Render each frame and encode
   for (let f = 0; f < totalFrames; f++) {
+    if (encodeError) throw encodeError;
+
     const t = Math.min(f / FPS, duration);
     renderer.setCurrentTime(t);
     timeline.seek(t);
@@ -126,38 +149,38 @@ export const exportMP4 = async (
       continue;
     }
 
-    // Request a frame capture from the stream
-    const track = stream.getVideoTracks()[0] as any;
-    if (track?.requestFrame) {
-      track.requestFrame();
-    }
+    const canvas = renderer.getCanvas();
+    const frame = new VideoFrame(canvas, {
+      timestamp: f * FRAME_DURATION_US,
+      duration: FRAME_DURATION_US,
+    });
 
-    // Small delay to let MediaRecorder process the frame
-    await delay(1000 / FPS);
+    encoder.encode(frame, { keyFrame: f % 30 === 0 });
+    frame.close();
 
     if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames}`);
   }
 
-  console.log('[exportMP4] All frames rendered, stopping recorder...');
+  console.log('[exportMP4] All frames rendered, flushing encoder...');
 
-  // 6. Stop and download
-  const blob = await new Promise<Blob>((resolve) => {
-    recorder.onstop = () => {
-      resolve(new Blob(chunks, { type: 'video/webm' }));
-    };
-    recorder.stop();
-  });
+  // 7. Flush encoder and finalize muxer
+  await encoder.flush();
+  encoder.close();
+  muxer.finalize();
 
-  console.log('[exportMP4] Video blob size:', blob.size);
+  const buffer = (muxer.target as ArrayBufferTarget).buffer;
+  console.log('[exportMP4] MP4 size:', buffer.byteLength);
 
+  // 8. Download
+  const blob = new Blob([buffer], { type: 'video/mp4' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${fileName}.webm`;
+  a.download = `${fileName}.mp4`;
   a.click();
   URL.revokeObjectURL(url);
 
-  // 7. Cleanup
+  // 9. Cleanup
   renderer.destroy();
   timeline.seek(0);
   timeline.kill();
