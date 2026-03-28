@@ -4,7 +4,9 @@ import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
 export const LOTTIE_PRESET_LIST = [
-  { value: 'bouncing', label: 'Bouncing' },
+  { value: 'walking', label: 'Walking' },
+  { value: 'running', label: 'Running' },
+  { value: 'bouncing', label: 'Bouncing Ball' },
   { value: 'pulse', label: 'Pulse' },
   { value: 'spinner', label: 'Spinner' },
   { value: 'checkmark', label: 'Checkmark' },
