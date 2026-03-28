@@ -94,3 +94,9 @@
 .markdown-rendered strong { font-weight: 700; }
 .markdown-rendered em { font-style: italic; }
 .markdown-rendered a { color: #2563eb; text-decoration: underline; }
+
+/* Dark variant overrides */
+.markdown-rendered.markdown-dark code { background: rgba(255,255,255,0.08); }
+.markdown-rendered.markdown-dark pre { background: rgba(255,255,255,0.06); }
+.markdown-rendered.markdown-dark blockquote { border-left-color: rgba(255,255,255,0.2); }
+.markdown-rendered.markdown-dark a { color: #60a5fa; }

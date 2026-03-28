@@ -61,19 +61,9 @@ const MarkdownComponent: React.FC<Props> = ({
     >
       {/* Background */}
       <rect x={x} y={y} width={width} height={height} rx={8} fill={bgColor} stroke={borderColor} strokeWidth={1.5} />
-      
-      {/* Header bar */}
-      <rect x={x} y={y} width={width} height={32} rx={8} fill={headerColor} />
-      <rect x={x} y={y + 24} width={width} height={8} fill={headerColor} />
-      <line x1={x} y1={y + 32} x2={x + width} y2={y + 32} stroke={borderColor} strokeWidth={1} />
-      
-      {/* Header text */}
-      <text x={x + 12} y={y + 21} fontSize={12} fontFamily="'Inter', sans-serif" fontWeight={600} fill={isDark ? '#a6adc8' : '#64748b'}>
-        Markdown
-      </text>
 
       {/* Content area */}
-      <foreignObject x={x + 1} y={y + 33} width={width - 2} height={height - 34}>
+      <foreignObject x={x + 1} y={y + 1} width={width - 2} height={height - 2}>
         <div
           ref={foreignRef}
           style={{
@@ -114,7 +104,7 @@ const MarkdownComponent: React.FC<Props> = ({
                 lineHeight: '1.6',
                 overflow: 'hidden',
               }}
-              className="markdown-rendered"
+              className={`markdown-rendered${isDark ? ' markdown-dark' : ''}`}
               dangerouslySetInnerHTML={{ __html: renderedHTML }}
             />
           )}
