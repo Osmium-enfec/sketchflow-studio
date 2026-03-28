@@ -20,7 +20,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   noteBox: StickyNote,
   docCodeBlock: Code2,
   markdown: FileCode2,
-  lottieCharacter: Film,
+  
 };
 
 const labelMap: Record<ComponentType, string> = {
@@ -41,7 +41,7 @@ const labelMap: Record<ComponentType, string> = {
   noteBox: 'Note Box',
   docCodeBlock: 'Code Block',
   markdown: 'Markdown',
-  lottieCharacter: 'Lottie',
+  
 };
 
 const LeftSidebar: React.FC = () => {

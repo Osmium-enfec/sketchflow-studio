@@ -20,7 +20,7 @@ const DURATION: Record<string, number> = {
   noteBox: 1.5,
   docCodeBlock: 1.8,
   markdown: 1.5,
-  lottieCharacter: 2.0,
+  
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -460,26 +460,6 @@ function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
-function animateLottieCharacter(el: SVGGElement): gsap.core.Timeline {
-  const tl = gsap.timeline();
-
-  // Fade in the foreignObject
-  const foreignObj = el.querySelector('foreignObject');
-  if (foreignObj) {
-    gsap.set(foreignObj, { opacity: 0 });
-    tl.to(foreignObj, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0);
-  }
-
-  // Start Lottie playback after fade-in
-  tl.call(() => {
-    const controlEl = el.querySelector('[data-lottie-control]') as any;
-    if (controlEl?.__lottiePlay) {
-      controlEl.__lottiePlay();
-    }
-  }, [], 0.3);
-
-  return tl;
-}
 
 // Animators that need component data use a wrapper
 type AnimatorFn = (el: SVGGElement, comp?: WhiteboardComponent) => gsap.core.Timeline;
@@ -502,7 +482,7 @@ const animators: Record<string, AnimatorFn> = {
   noteBox: animateNoteBox,
   docCodeBlock: animateDocCodeBlock,
   markdown: animateMarkdown,
-  lottieCharacter: animateLottieCharacter,
+  
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {

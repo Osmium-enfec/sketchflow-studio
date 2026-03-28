@@ -16,14 +16,12 @@ import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import MarkdownComponent from './canvas/MarkdownComponent';
-import LottieCharacterComponent from './canvas/LottieCharacterComponent';
+
 import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
 import { toast } from 'sonner';
 import { CHARACTER_ANIMATIONS } from '@/lib/characterAnimations';
-import { LOTTIE_PRESETS } from '@/lib/lottiePresets';
-import { LOTTIE_PRESET_LIST } from './canvas/LottieCharacterComponent';
 
 const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
 const NOTE_SWATCH_COLORS: Record<string, string> = {
@@ -185,7 +183,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown' || comp.type === 'lottieCharacter') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -383,53 +381,6 @@ const Canvas: React.FC = () => {
         </div>
       )}
 
-      {/* Lottie preset selector */}
-      {selectedComp && selectedComp.type === 'lottieCharacter' && (
-        <div className="absolute top-3 left-3 z-10 bg-card border rounded-lg shadow-sm p-3 max-w-[320px]">
-          <div className="flex flex-wrap items-center gap-1.5 mb-2">
-            <span className="text-xs text-muted-foreground font-medium mr-1">Characters:</span>
-            {LOTTIE_PRESET_LIST.filter(p => p.category === 'character').map((preset) => (
-              <button
-                key={preset.value}
-                onClick={() => updateComponentProps(selectedComp.id, { lottiePreset: preset.value })}
-                className={`px-2 py-1 text-xs rounded transition-colors ${
-                  selectedComp.props.lottiePreset === preset.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground'
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5 mb-2">
-            <span className="text-xs text-muted-foreground font-medium mr-1">Effects:</span>
-            {LOTTIE_PRESET_LIST.filter(p => p.category === 'effect').map((preset) => (
-              <button
-                key={preset.value}
-                onClick={() => updateComponentProps(selectedComp.id, { lottiePreset: preset.value })}
-                className={`px-2 py-1 text-xs rounded transition-colors ${
-                  selectedComp.props.lottiePreset === preset.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'hover:bg-muted text-muted-foreground'
-                }`}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground font-medium">URL:</span>
-            <input
-              type="text"
-              placeholder="Paste Lottie JSON URL..."
-              value={selectedComp.props.lottieUrl || ''}
-              onChange={(e) => updateComponentProps(selectedComp.id, { lottiePreset: 'custom', lottieUrl: e.target.value })}
-              className="flex-1 text-xs px-2 py-1 border rounded bg-background text-foreground outline-none focus:border-primary"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Inline text editor overlay (skip for docCodeBlock which has its own inline editor) */}
       {editingId && editPos && (() => { const ec = components.find(c => c.id === editingId); return ec?.type !== 'docCodeBlock'; })() && (
@@ -735,17 +686,6 @@ const Canvas: React.FC = () => {
                       setEditPos(null);
                       setEditField('text');
                     }}
-                  />
-                );
-              }
-              if (comp.type === 'lottieCharacter') {
-                return (
-                  <LottieCharacterComponent
-                    key={comp.id}
-                    component={comp}
-                    isSelected={selectedId === comp.id}
-                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
-                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
               }
