@@ -109,9 +109,24 @@ const TopToolbar: React.FC = () => {
                 <div className="w-4 h-4 border rounded bg-gray-900" /> Dark Page
               </button>
               <div className="border-t my-1" />
-              <button onClick={() => { addComponent('noteBox'); setDocsOpen(false); }}
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Note</div>
+              <button onClick={() => { addComponent('noteBox', { variant: 'light' }); setDocsOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <div className="w-4 h-4 rounded border-l-[3px] border-l-green-600 bg-green-50" /> Note Callout
+                <div className="w-4 h-4 rounded border-l-[3px] border-l-green-600 bg-green-50" /> Light Note
+              </button>
+              <button onClick={() => { addComponent('noteBox', { variant: 'dark' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 rounded border-l-[3px] border-l-green-400 bg-green-950" /> Dark Note
+              </button>
+              <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Code</div>
+              <button onClick={() => { addComponent('docCodeBlock', { variant: 'light' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 rounded border bg-green-50 flex items-center justify-center text-[6px] font-mono text-green-800">{'{}'}</div> Light Code
+              </button>
+              <button onClick={() => { addComponent('docCodeBlock', { variant: 'dark' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 rounded border bg-slate-900 flex items-center justify-center text-[6px] font-mono text-blue-400">{'{}'}</div> Dark Code
               </button>
             </div>
           )}

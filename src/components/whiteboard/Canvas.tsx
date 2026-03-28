@@ -14,6 +14,7 @@ import CodeBoxComponent from './canvas/CodeBoxComponent';
 import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
+import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -158,7 +159,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -462,6 +463,34 @@ const Canvas: React.FC = () => {
                         x: comp.props.x * scaleX + rect.left + (field === 'noteTitle' ? 48 : 24) * scaleX,
                         y: (comp.props.y + yOffset) * scaleY + rect.top,
                         width: (comp.props.width || 460) * scaleX - 60,
+                      });
+                    }}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
+              if (comp.type === 'docCodeBlock') {
+                return (
+                  <DocCodeBlockComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e, field) => {
+                      e.stopPropagation();
+                      setEditingId(comp.id);
+                      setEditField(field);
+                      setEditText(comp.props[field] || '');
+                      const svg = svgRef.current!;
+                      const rect = svg.getBoundingClientRect();
+                      const scaleX = rect.width / CANVAS_W;
+                      const scaleY = rect.height / CANVAS_H;
+                      const cScale = (comp.props.width || 520) / 520;
+                      const yOffset = field === 'codeTitle' ? 10 * cScale : 36 * cScale + 10;
+                      setEditPos({
+                        x: comp.props.x * scaleX + rect.left + 24 * cScale * scaleX,
+                        y: (comp.props.y + yOffset) * scaleY + rect.top,
+                        width: (comp.props.width || 520) * scaleX - 60,
                       });
                     }}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}

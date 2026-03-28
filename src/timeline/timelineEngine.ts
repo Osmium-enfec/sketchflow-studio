@@ -16,6 +16,7 @@ const DURATION: Record<string, number> = {
   openPeep: 3.0,
   documentation: 2.0,
   noteBox: 1.5,
+  docCodeBlock: 1.8,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -395,6 +396,39 @@ function animateNoteBox(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateDocCodeBlock(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+
+  const body = el.querySelector('.code-body');
+  const header = el.querySelector('.code-header');
+  const headerLine = el.querySelector('.code-header-line');
+  const titleText = el.querySelector('.code-title-text');
+  const copyIcon = el.querySelector('.code-copy-icon');
+  const contentText = el.querySelector('.code-content-text');
+  const codeLines = el.querySelectorAll('.code-line');
+
+  // Body fades in
+  if (body) { gsap.set(body, { opacity: 0, scaleY: 0.9, transformOrigin: 'top center' }); tl.to(body, { opacity: 1, scaleY: 1, duration: 0.4, ease: 'power2.out' }, 0); }
+  if (header) { gsap.set(header, { opacity: 0 }); tl.to(header, { opacity: 1, duration: 0.3 }, 0.1); }
+  if (headerLine) { gsap.set(headerLine, { opacity: 0 }); tl.to(headerLine, { opacity: 1, duration: 0.2 }, 0.2); }
+  if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.3); }
+  if (copyIcon) { gsap.set(copyIcon, { opacity: 0, scale: 0 }); tl.to(copyIcon, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' }, 0.3); }
+
+  // Code lines appear one by one
+  codeLines.forEach((line, i) => {
+    gsap.set(line, { opacity: 0 });
+    tl.to(line, { opacity: 1, duration: 0.15 }, 0.5 + i * 0.1);
+  });
+
+  // Fallback for content text
+  if (contentText && codeLines.length === 0) {
+    gsap.set(contentText, { opacity: 0 });
+    tl.to(contentText, { opacity: 1, duration: 0.4 }, 0.5);
+  }
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
@@ -410,6 +444,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   openPeep: animateOpenPeep,
   documentation: animateDocumentation,
   noteBox: animateNoteBox,
+  docCodeBlock: animateDocCodeBlock,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
