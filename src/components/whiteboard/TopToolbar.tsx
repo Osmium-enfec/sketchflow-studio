@@ -282,42 +282,6 @@ const TopToolbar: React.FC = () => {
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
               </button>
               <div className="border-t my-1" />
-              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie Characters</div>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'walking' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Walking
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'sayHello' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Say Hello
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'working' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Working
-              </button>
-              <div className="border-t my-1" />
-              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie Effects</div>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'bouncing' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Bouncing Ball
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'pulse' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Pulse
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'spinner' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Spinner
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'checkmark' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Checkmark
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'waveform' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Waveform
-              </button>
-              <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>
               <button onClick={() => { addComponent('device', { variant: 'phone' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
