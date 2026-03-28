@@ -158,7 +158,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -437,6 +437,33 @@ const Canvas: React.FC = () => {
                     component={comp}
                     isSelected={selectedId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
+              if (comp.type === 'noteBox') {
+                return (
+                  <NoteBoxComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e, field) => {
+                      e.stopPropagation();
+                      setEditingId(comp.id);
+                      setEditField(field);
+                      setEditText(comp.props[field] || '');
+                      const svg = svgRef.current!;
+                      const rect = svg.getBoundingClientRect();
+                      const scaleX = rect.width / CANVAS_W;
+                      const scaleY = rect.height / CANVAS_H;
+                      const yOffset = field === 'noteTitle' ? 14 : 42;
+                      setEditPos({
+                        x: comp.props.x * scaleX + rect.left + (field === 'noteTitle' ? 48 : 24) * scaleX,
+                        y: (comp.props.y + yOffset) * scaleY + rect.top,
+                        width: (comp.props.width || 460) * scaleX - 60,
+                      });
+                    }}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
