@@ -282,10 +282,18 @@ const TopToolbar: React.FC = () => {
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
               </button>
               <div className="border-t my-1" />
-              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Walking</div>
-              <button onClick={() => { addComponent('walkingCharacter'); closeAll(); }}
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Animated</div>
+              <button onClick={() => { addComponent('walkingCharacter', { variant: 'femaleWalking' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <PersonStanding className="h-4 w-4 text-muted-foreground" /> Female Walking
+                <Film className="h-4 w-4 text-muted-foreground" /> Female Walking
+              </button>
+              <button onClick={() => { addComponent('walkingCharacter', { variant: 'maleWalking' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Male Walking
+              </button>
+              <button onClick={() => { addComponent('walkingCharacter', { variant: 'maleWalking2' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Male Walking 2
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>

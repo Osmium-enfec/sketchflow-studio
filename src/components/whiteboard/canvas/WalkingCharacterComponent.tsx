@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import femaleWalkingData from '@/assets/female-walking.json';
+import { getVariantData } from '@/lib/characterLottieVariants';
 
 interface Props {
   component: WhiteboardComponent;
@@ -10,9 +10,9 @@ interface Props {
   onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
 
-const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean }> = ({ width, height, flipped }) => {
+const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean; animationData: any }> = ({ width, height, flipped, animationData }) => {
   const { View, goToAndStop, play, stop } = useLottie({
-    animationData: femaleWalkingData,
+    animationData,
     loop: true,
     autoplay: false,
     style: {
@@ -48,7 +48,10 @@ const WalkingCharacterComponent: React.FC<Props> = ({ component, isSelected, onM
     height = 250,
     flipped = false,
     walkDistance = 200,
+    variant = 'femaleWalking',
   } = component.props;
+
+  const variantData = getVariantData(variant);
 
   const handles = ['se', 'sw', 'ne', 'nw'];
   const handlePositions: Record<string, { cx: number; cy: number }> = {
@@ -68,7 +71,7 @@ const WalkingCharacterComponent: React.FC<Props> = ({ component, isSelected, onM
         onMouseDown={onMouseDown}
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
-        <WalkingInner width={width} height={height} flipped={flipped} />
+        <WalkingInner width={width} height={height} flipped={flipped} animationData={variantData.data} />
       </foreignObject>
 
       {isSelected && (

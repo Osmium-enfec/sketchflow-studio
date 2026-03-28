@@ -50,7 +50,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   noteBox: (n) => ({ x: 300 + n * 20, y: 200 + n * 20, width: 460, height: 140, noteTitle: 'Note', noteContent: 'Your note content goes here.', variant: 'light' }),
   docCodeBlock: (n) => ({ x: 300 + n * 20, y: 250 + n * 20, width: 520, height: 200, codeTitle: 'polls/views.py', codeContent: 'from django.http import HttpResponse\n\ndef index(request):\n    return HttpResponse("Hello, world.")', variant: 'light' }),
   markdown: (n) => ({ x: 300 + n * 20, y: 200 + n * 20, width: 400, height: 300, markdownContent: '# Hello World\n\nWrite your **markdown** here.\n\n- Item 1\n- Item 2\n\n```\ncode block\n```', variant: 'light' }),
-  walkingCharacter: (n) => ({ x: 400 + n * 20, y: 200 + n * 20, width: 250, height: 250, flipped: false, walkDistance: 200 }),
+  walkingCharacter: (n) => ({ x: 400 + n * 20, y: 200 + n * 20, width: 250, height: 250, flipped: false, walkDistance: 200, variant: 'femaleWalking' }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
