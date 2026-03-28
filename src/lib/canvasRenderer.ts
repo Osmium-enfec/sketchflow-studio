@@ -11,12 +11,14 @@ interface LottieInstance {
 /**
  * Offscreen canvas renderer that programmatically draws the whiteboard scene
  * by serializing SVG content and overlaying Lottie character animations.
- * Replaces html2canvas for video export.
  */
 export class CanvasRenderer {
   private offscreenCanvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private lottieInstances: LottieInstance[] = [];
+  // Cache the SVG image to avoid re-creating every frame when static content hasn't changed
+  private cachedSvgImg: HTMLImageElement | null = null;
+  private cachedSvgUrl: string | null = null;
 
   constructor(private width: number, private height: number) {
     this.offscreenCanvas = document.createElement('canvas');
@@ -44,8 +46,18 @@ export class CanvasRenderer {
       canvas.width = w;
       canvas.height = h;
 
+      const container = document.createElement('div');
+      container.style.width = w + 'px';
+      container.style.height = h + 'px';
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.pointerEvents = 'none';
+      container.style.opacity = '0';
+      document.body.appendChild(container);
+
       const anim = lottie.loadAnimation({
-        container: canvas as any,
+        container,
         renderer: 'canvas',
         rendererSettings: {
           context: canvas.getContext('2d')!,
@@ -74,19 +86,19 @@ export class CanvasRenderer {
       const origPlay = controlEl.__lottiePlay;
       const origStop = controlEl.__lottieStop;
       const origGoTo = controlEl.__lottieGoTo;
-      const renderer = this;
+      const self = this;
 
       controlEl.__lottiePlay = function () {
         origPlay?.();
-        renderer.startLottie(comp.id);
+        self.startLottie(comp.id);
       };
       controlEl.__lottieStop = function () {
         origStop?.();
-        renderer.stopLottie(comp.id);
+        self.stopLottie(comp.id);
       };
       controlEl.__lottieGoTo = function (frame: number, isFrame: boolean) {
         origGoTo?.(frame, isFrame);
-        renderer.goToLottie(comp.id, frame, isFrame);
+        self.goToLottie(comp.id, frame, isFrame);
       };
     }
   }
@@ -119,6 +131,30 @@ export class CanvasRenderer {
     this.drawLottieCharacters(svgEl);
   }
 
+  /**
+   * Inline all computed styles into element attributes for SVG serialization.
+   * This ensures styles survive when the SVG is rendered as a standalone image.
+   */
+  private inlineStyles(clone: SVGSVGElement) {
+    const allElements = clone.querySelectorAll('*');
+    const important = [
+      'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset',
+      'opacity', 'font-family', 'font-size', 'font-weight', 'text-anchor',
+      'dominant-baseline', 'transform', 'visibility', 'display',
+      'fill-opacity', 'stroke-opacity', 'stroke-linecap', 'stroke-linejoin',
+    ];
+    
+    allElements.forEach(el => {
+      const computed = window.getComputedStyle(el as Element);
+      important.forEach(prop => {
+        const val = computed.getPropertyValue(prop);
+        if (val && val !== 'none' && val !== 'normal' && val !== '' && val !== 'auto') {
+          (el as SVGElement).style.setProperty(prop, val);
+        }
+      });
+    });
+  }
+
   private drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
     return new Promise((resolve) => {
       const clone = svgEl.cloneNode(true) as SVGSVGElement;
@@ -132,36 +168,22 @@ export class CanvasRenderer {
       if (!clone.getAttribute('viewBox')) {
         clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
       }
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 
-      // Add xmlns if missing
-      if (!clone.getAttribute('xmlns')) {
-        clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      }
+      // Inline computed styles so they survive serialization
+      // We need the clone temporarily in the DOM to compute styles
+      clone.style.position = 'fixed';
+      clone.style.left = '-99999px';
+      clone.style.top = '-99999px';
+      document.body.appendChild(clone);
+      this.inlineStyles(clone);
+      document.body.removeChild(clone);
 
       const svgData = new XMLSerializer().serializeToString(clone);
-      const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
 
-      // Use createImageBitmap for faster off-thread decoding when available
-      if (typeof createImageBitmap !== 'undefined') {
-        createImageBitmap(blob)
-          .then((bitmap) => {
-            this.ctx.drawImage(bitmap, 0, 0, this.width, this.height);
-            bitmap.close();
-            resolve();
-          })
-          .catch(() => {
-            // Fallback to Image approach
-            this.drawSvgViaImage(blob).then(resolve);
-          });
-      } else {
-        this.drawSvgViaImage(blob).then(resolve);
-      }
-    });
-  }
-
-  private drawSvgViaImage(blob: Blob): Promise<void> {
-    return new Promise((resolve) => {
-      const url = URL.createObjectURL(blob);
       const img = new Image();
       img.onload = () => {
         this.ctx.drawImage(img, 0, 0, this.width, this.height);
@@ -170,7 +192,7 @@ export class CanvasRenderer {
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        resolve();
+        resolve(); // skip on error
       };
       img.src = url;
     });
@@ -190,20 +212,13 @@ export class CanvasRenderer {
       const h = parseFloat(fo.getAttribute('height') || '250');
 
       // Check opacity — skip if hidden
-      const opacity = fo.style?.opacity;
+      const opacity = (fo as SVGForeignObjectElement).style?.opacity;
       if (opacity === '0') continue;
 
       // Handle flip
       const flipped = gEl.getAttribute('data-walk-flipped') === '1';
       const facesRight = gEl.getAttribute('data-walk-faces-right') === '1';
       const needsFlip = facesRight ? flipped : !flipped;
-
-      // Resize lottie canvas if dimensions changed
-      if (inst.canvas.width !== w || inst.canvas.height !== h) {
-        inst.canvas.width = w;
-        inst.canvas.height = h;
-        inst.anim.resize();
-      }
 
       if (needsFlip) {
         this.ctx.save();
@@ -219,12 +234,21 @@ export class CanvasRenderer {
 
   destroyLottieInstances() {
     for (const inst of this.lottieInstances) {
-      try { inst.anim.destroy(); } catch (_) { /* ignore */ }
+      try {
+        // Clean up hidden container
+        const container = (inst.anim as any).wrapper;
+        if (container?.parentNode) container.parentNode.removeChild(container);
+        inst.anim.destroy();
+      } catch (_) { /* ignore */ }
     }
     this.lottieInstances = [];
   }
 
   destroy() {
     this.destroyLottieInstances();
+    if (this.cachedSvgUrl) {
+      URL.revokeObjectURL(this.cachedSvgUrl);
+      this.cachedSvgUrl = null;
+    }
   }
 }
