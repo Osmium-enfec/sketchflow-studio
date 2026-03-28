@@ -2,7 +2,6 @@ import jsPDF from 'jspdf';
 import { CanvasRenderer } from './canvasRenderer';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { buildTimeline } from '@/timeline/timelineEngine';
-import { loadFFmpeg } from './ffmpegEncoder';
 
 /**
  * Serialize SVG to a data URL image, then resolve with the rendered canvas.
@@ -15,7 +14,7 @@ const svgToCanvas = (svgEl: SVGSVGElement, width: number, height: number): Promi
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = width * 2; // 2x for high quality
+      canvas.width = width * 2;
       canvas.height = height * 2;
       const ctx = canvas.getContext('2d')!;
       ctx.scale(2, 2);
@@ -34,10 +33,8 @@ const svgToCanvas = (svgEl: SVGSVGElement, width: number, height: number): Promi
 export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: number, fileName = 'whiteboard') => {
   const isPortrait = canvasH > canvasW;
   const orientation = isPortrait ? 'portrait' : 'landscape';
-  
   const pdfWidth = isPortrait ? 210 : 297;
   const pdfHeight = isPortrait ? 297 : 210;
-  
   const scale = Math.min(pdfWidth / canvasW, pdfHeight / canvasH);
   const imgW = canvasW * scale;
   const imgH = canvasH * scale;
@@ -46,22 +43,24 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 
   const canvas = await svgToCanvas(svgEl, canvasW, canvasH);
   const imgData = canvas.toDataURL('image/png', 1.0);
-  
   const pdf = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
   pdf.addImage(imgData, 'PNG', offsetX, offsetY, imgW, imgH);
   pdf.save(`${fileName}.pdf`);
 };
 
 /**
- * Export animation as H.264 MP4 using deterministic frame-by-frame rendering + FFmpeg.wasm.
- * 
- * How it works (Canva-style approach):
+ * Wait for a specific duration using requestAnimationFrame for accuracy.
+ */
+const waitFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+
+/**
+ * Export animation as WebM video using deterministic frame-by-frame rendering + MediaRecorder.
+ *
  * 1. Build a paused GSAP timeline
  * 2. Step through it frame-by-frame with timeline.seek()
  * 3. At each frame, render SVG + Lottie to an offscreen canvas
- * 4. Collect frames as JPEG images
- * 5. Encode into H.264 MP4 with FFmpeg.wasm
- * 6. Download the result
+ * 4. Use canvas.captureStream() + MediaRecorder to encode WebM
+ * 5. Download the result
  */
 export const exportMP4 = async (
   svgEl: SVGSVGElement,
@@ -77,7 +76,6 @@ export const exportMP4 = async (
   // 1. Setup offscreen renderer + lottie instances
   const renderer = new CanvasRenderer(canvasW, canvasH);
   renderer.initLottieInstances(components);
-  console.log('[exportMP4] Renderer initialized');
 
   // 2. Replace DOM lottie controls with deterministic state trackers
   renderer.setupDeterministicControls(svgEl, components);
@@ -94,10 +92,26 @@ export const exportMP4 = async (
     throw new Error('Timeline has no duration — nothing to export');
   }
 
-  // 4. Load FFmpeg.wasm (cached after first load)
-  console.log('[exportMP4] Loading FFmpeg...');
-  const ffmpeg = await loadFFmpeg();
-  console.log('[exportMP4] FFmpeg loaded');
+  // 4. Setup MediaRecorder on the offscreen canvas stream
+  const canvas = renderer.getCanvas();
+  const stream = canvas.captureStream(0); // 0 = manual frame capture
+  
+  const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9'
+    : 'video/webm;codecs=vp8';
+  
+  const recorder = new MediaRecorder(stream, {
+    mimeType,
+    videoBitsPerSecond: 8_000_000,
+  });
+
+  const chunks: Blob[] = [];
+  recorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+
+  recorder.start();
+  console.log('[exportMP4] MediaRecorder started with', mimeType);
 
   // 5. Render each frame deterministically
   for (let f = 0; f < totalFrames; f++) {
@@ -112,52 +126,39 @@ export const exportMP4 = async (
       continue;
     }
 
-    // Convert canvas to JPEG and write to FFmpeg virtual FS
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      renderer.getCanvas().toBlob((b) => {
-        if (b) resolve(b);
-        else reject(new Error(`Frame ${f}: toBlob returned null`));
-      }, 'image/jpeg', 0.92);
-    });
-    const data = new Uint8Array(await blob.arrayBuffer());
-    await ffmpeg.writeFile(`f${String(f).padStart(5, '0')}.jpg`, data);
-    
-    if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames} written`);
+    // Request a frame capture from the stream
+    const track = stream.getVideoTracks()[0] as any;
+    if (track?.requestFrame) {
+      track.requestFrame();
+    }
+
+    // Small delay to let MediaRecorder process the frame
+    await waitFrame();
+
+    if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames}`);
   }
-  console.log('[exportMP4] All frames written, encoding...');
 
-  // 6. Encode frames into H.264 MP4
-  console.log('[exportMP4] Starting FFmpeg encode...');
-  ffmpeg.on('log', ({ message }) => console.log('[ffmpeg]', message));
-  const exitCode = await ffmpeg.exec([
-    '-framerate', String(FPS),
-    '-i', 'f%05d.jpg',
-    '-c:v', 'libx264',
-    '-pix_fmt', 'yuv420p',
-    '-preset', 'ultrafast',
-    '-crf', '23',
-    'output.mp4',
-  ]);
-  console.log('[exportMP4] FFmpeg exit code:', exitCode);
+  console.log('[exportMP4] All frames rendered, stopping recorder...');
 
-  // 7. Download the MP4
-  const output = await ffmpeg.readFile('output.mp4');
-  const outputData = output as Uint8Array;
-  const mp4Blob = new Blob([new Uint8Array(outputData)], { type: 'video/mp4' });
-  const url = URL.createObjectURL(mp4Blob);
+  // 6. Stop and download
+  const blob = await new Promise<Blob>((resolve) => {
+    recorder.onstop = () => {
+      resolve(new Blob(chunks, { type: 'video/webm' }));
+    };
+    recorder.stop();
+  });
+
+  console.log('[exportMP4] Video blob size:', blob.size);
+
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${fileName}.mp4`;
+  a.download = `${fileName}.webm`;
   a.click();
   URL.revokeObjectURL(url);
 
-  // 8. Cleanup
+  // 7. Cleanup
   renderer.destroy();
   timeline.seek(0);
   timeline.kill();
-
-  for (let f = 0; f < totalFrames; f++) {
-    try { await ffmpeg.deleteFile(`f${String(f).padStart(5, '0')}.jpg`); } catch { /* ignore */ }
-  }
-  try { await ffmpeg.deleteFile('output.mp4'); } catch { /* ignore */ }
 };
