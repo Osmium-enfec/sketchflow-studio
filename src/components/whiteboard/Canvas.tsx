@@ -193,6 +193,10 @@ const Canvas: React.FC = () => {
             newProps = { x: startProps.x + dx, y: startProps.y + dy, width: Math.max(60, startProps.width - dx), height: Math.max(40, startProps.height - dy) };
           }
           updateComponentProps(id, newProps);
+        } else if (comp.type === 'content') {
+          if (handle === 'e') {
+            updateComponentProps(id, { width: Math.max(150, startProps.width + dx) });
+          }
         } else if (comp.type === 'highlight') {
           if (handle === 'e') {
             updateComponentProps(id, { width: Math.max(30, startProps.width + dx) });
@@ -418,6 +422,7 @@ const Canvas: React.FC = () => {
                     isEditing={editingId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
                     onDoubleClick={(e) => handleDoubleClick(e, comp.id)}
+                    onResizeStart={comp.type === 'content' ? (e, handle) => handleResizeStart(e, comp.id, handle) : undefined}
                   />
                 );
               }
