@@ -402,7 +402,7 @@ const Canvas: React.FC = () => {
             )}
 
             {components.map((comp) => {
-              if (comp.type === 'title') {
+              if (comp.type === 'title' || comp.type === 'content') {
                 return (
                   <TitleComponent
                     key={comp.id}
