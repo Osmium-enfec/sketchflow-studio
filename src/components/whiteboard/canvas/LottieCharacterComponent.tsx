@@ -1,12 +1,10 @@
 import React, { useMemo } from 'react';
-import LottiePlayer from 'lottie-react';
+import * as LottieModule from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
-// Handle both default and named export patterns
-const Lottie = (typeof LottiePlayer === 'object' && LottiePlayer && 'default' in LottiePlayer)
-  ? (LottiePlayer as any).default
-  : LottiePlayer;
+// lottie-react exports default as a property on the module object
+const Lottie = (LottieModule as any).default || LottieModule;
 
 export const LOTTIE_PRESET_LIST = [
   { value: 'bouncing', label: 'Bouncing' },
