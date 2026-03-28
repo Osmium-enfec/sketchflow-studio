@@ -105,15 +105,26 @@ export const exportMP4 = async (
     renderer.setCurrentTime(t);
     timeline.seek(t);
 
-    await renderer.renderFrame(svgEl);
+    try {
+      await renderer.renderFrame(svgEl);
+    } catch (err) {
+      console.error(`[exportMP4] Frame ${f} render failed:`, err);
+      continue;
+    }
 
     // Convert canvas to JPEG and write to FFmpeg virtual FS
-    const blob = await new Promise<Blob>((resolve) => {
-      renderer.getCanvas().toBlob((b) => resolve(b!), 'image/jpeg', 0.92);
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      renderer.getCanvas().toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error(`Frame ${f}: toBlob returned null`));
+      }, 'image/jpeg', 0.92);
     });
     const data = new Uint8Array(await blob.arrayBuffer());
     await ffmpeg.writeFile(`f${String(f).padStart(5, '0')}.jpg`, data);
+    
+    if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames} written`);
   }
+  console.log('[exportMP4] All frames written, encoding...');
 
   // 6. Encode frames into H.264 MP4
   await ffmpeg.exec([
