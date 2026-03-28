@@ -234,8 +234,10 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
       onMouseDown={onMouseDown}
       style={{ cursor: editingField ? 'text' : 'grab' }}
     >
+      {/* Transparent hit area for click selection */}
+      <rect x={x} y={y} width={width} height={height} rx={rx} fill="transparent" />
       {/* Body background */}
-      <rect x={x} y={y} width={width} height={height} rx={rx} fill={bodyBg} stroke={bodyBorder} strokeWidth={1.5} className="code-body" />
+      <rect x={x} y={y} width={width} height={height} rx={rx} fill={bodyBg} stroke={bodyBorder} strokeWidth={1.5} className="code-body" style={{ pointerEvents: 'none' }} />
 
       {/* Header bar */}
       <rect x={x} y={y} width={width} height={headerHeight} rx={rx} fill={headerBg} className="code-header" />
@@ -330,12 +332,12 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
                   {lineIdx + 1}
                 </text>
 
-                {/* Code tokens */}
                 <text
                   x={x + codePadLeft}
                   y={lineY}
                   fontFamily="'Courier New', monospace"
                   fontSize={codeFontSize}
+                  xmlSpace="preserve"
                 >
                   {segments.map((seg, segIdx) => (
                     <tspan
