@@ -121,7 +121,7 @@ export const exportMP4 = (
         const target = svgWrapper || svgEl;
         const rect = target.getBoundingClientRect();
         
-        const snapshot = await html2canvas(target, {
+        const snapshot = await html2canvas(target as HTMLElement, {
           width: rect.width,
           height: rect.height,
           scale: canvasW / rect.width, // Scale up to full canvas resolution
