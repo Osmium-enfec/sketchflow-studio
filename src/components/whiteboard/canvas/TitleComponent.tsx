@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { WhiteboardComponent } from '@/store/whiteboardStore';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { WhiteboardComponent, useWhiteboardStore } from '@/store/whiteboardStore';
 import { marked } from 'marked';
 
 interface Props {
@@ -8,16 +8,18 @@ interface Props {
   isEditing: boolean;
   onMouseDown: (e: React.MouseEvent) => void;
   onDoubleClick: (e: React.MouseEvent) => void;
+  onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
 
-const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
+const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick, onResizeStart }) => {
   const { text, x, y, fontSize = 42 } = component.props;
   const isContentType = component.type === 'content';
   const textRef = useRef<SVGTextElement>(null);
   const foreignRef = useRef<HTMLDivElement>(null);
   const [bbox, setBbox] = React.useState({ width: 0, height: 0 });
+  const [measuredHeight, setMeasuredHeight] = React.useState(0);
+  const updateComponentProps = useWhiteboardStore((s) => s.updateComponentProps);
 
-  // Content type always renders markdown; title only when markdown syntax detected
   const hasMarkdown = useMemo(() => {
     if (isContentType) return true;
     return /[*_#`~\[\]!>|-]/.test(text || '');
@@ -38,11 +40,30 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
     }
   }, [text, fontSize, hasMarkdown]);
 
-  // Estimate dimensions for markdown rendered content
+  // Measure actual rendered content height
+  useEffect(() => {
+    if (isContentType && foreignRef.current) {
+      const measure = () => {
+        if (foreignRef.current) {
+          const h = foreignRef.current.scrollHeight;
+          if (h > 0 && h !== measuredHeight) {
+            setMeasuredHeight(h);
+          }
+        }
+      };
+      // Measure after render
+      requestAnimationFrame(measure);
+      // Also measure after a short delay for fonts loading
+      const timer = setTimeout(measure, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isContentType, text, fontSize, component.props.width, renderedHTML]);
+
   const contentWidth = component.props.width || 500;
-  const lineCount = isContentType ? Math.max(3, (text || '').split('\n').length) : 1;
   const mdWidth = isContentType ? contentWidth : Math.max(200, (text || '').length * fontSize * 0.55);
-  const mdHeight = isContentType ? Math.max(80, lineCount * fontSize * 1.4 + 40) : fontSize * 1.6;
+  const mdHeight = isContentType
+    ? Math.max(40, measuredHeight || 40)
+    : fontSize * 1.6;
 
   const selWidth = hasMarkdown ? mdWidth : bbox.width;
   const selHeight = hasMarkdown ? mdHeight : bbox.height;
@@ -55,21 +76,38 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
       style={{ cursor: 'move' }}
     >
       {isSelected && (
-        <rect
-          x={x - 10}
-          y={hasMarkdown ? y - 5 : y - selHeight - 5}
-          width={selWidth + 20}
-          height={selHeight + 15}
-          fill="none"
-          stroke="hsl(210 80% 70%)"
-          strokeWidth="2"
-          strokeDasharray="6 3"
-          rx="4"
-        />
+        <>
+          <rect
+            x={x - 10}
+            y={hasMarkdown ? y - 5 : y - selHeight - 5}
+            width={selWidth + 20}
+            height={selHeight + 15}
+            fill="none"
+            stroke="hsl(210 80% 70%)"
+            strokeWidth="2"
+            strokeDasharray="6 3"
+            rx="4"
+          />
+          {/* Width resize handle on right edge for content */}
+          {isContentType && onResizeStart && (
+            <rect
+              x={x + contentWidth - 5}
+              y={y + mdHeight / 2 - 12}
+              width={10}
+              height={24}
+              rx={3}
+              fill="white"
+              stroke="hsl(210 80% 60%)"
+              strokeWidth={2}
+              style={{ cursor: 'ew-resize' }}
+              onMouseDown={(e) => { e.stopPropagation(); onResizeStart(e, 'e'); }}
+            />
+          )}
+        </>
       )}
 
       {hasMarkdown ? (
-        <foreignObject x={x} y={y} width={mdWidth} height={mdHeight}>
+        <foreignObject x={x} y={y} width={mdWidth} height={Math.max(mdHeight, 30)}>
           <div
             ref={foreignRef}
             className="title-text markdown-rendered"
@@ -80,7 +118,6 @@ const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, o
               userSelect: 'none',
               lineHeight: 1.5,
               whiteSpace: isContentType ? 'normal' : 'nowrap',
-              overflow: 'hidden',
             }}
             data-full-text={text}
             dangerouslySetInnerHTML={{ __html: renderedHTML }}
