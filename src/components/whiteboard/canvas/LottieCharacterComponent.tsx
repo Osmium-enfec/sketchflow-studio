@@ -4,7 +4,7 @@ import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
 // Handle both default and named export patterns
-const Lottie = (typeof LottiePlayer === 'object' && LottiePlayer !== null && 'default' in LottiePlayer)
+const Lottie = (typeof LottiePlayer === 'object' && LottiePlayer && 'default' in LottiePlayer)
   ? (LottiePlayer as any).default
   : LottiePlayer;
 
