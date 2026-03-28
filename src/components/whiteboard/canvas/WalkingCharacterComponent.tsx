@@ -33,7 +33,8 @@ const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean; 
     (el as any).__lottiePlay = play;
     (el as any).__lottieStop = stop;
     (el as any).__lottieGoTo = goToAndStop;
-    goToAndStop(0, true);
+    // Always start playing so the animation is visible
+    play();
     return () => { stop(); };
   }, [play, stop, goToAndStop]);
 
