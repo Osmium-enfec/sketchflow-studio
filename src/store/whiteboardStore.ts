@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown';
+export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown' | 'lottieCharacter';
 
 export type CanvasType = 'whiteboard' | 'doc-white' | 'doc-dark';
 
