@@ -12,14 +12,16 @@ interface Props {
 
 const TitleComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick }) => {
   const { text, x, y, fontSize = 42 } = component.props;
+  const isContentType = component.type === 'content';
   const textRef = useRef<SVGTextElement>(null);
   const foreignRef = useRef<HTMLDivElement>(null);
   const [bbox, setBbox] = React.useState({ width: 0, height: 0 });
 
-  // Check if text contains markdown syntax
+  // Content type always renders markdown; title only when markdown syntax detected
   const hasMarkdown = useMemo(() => {
+    if (isContentType) return true;
     return /[*_#`~\[\]!>|-]/.test(text || '');
-  }, [text]);
+  }, [text, isContentType]);
 
   const renderedHTML = useMemo(() => {
     if (!hasMarkdown) return '';

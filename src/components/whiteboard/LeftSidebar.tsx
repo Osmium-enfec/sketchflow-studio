@@ -4,6 +4,7 @@ import { useWhiteboardStore, ComponentType } from '@/store/whiteboardStore';
 
 const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   title: Type,
+  content: FileCode2,
   box: Square,
   arrow: ArrowRight,
   highlight: Highlighter,
@@ -23,6 +24,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
 
 const labelMap: Record<ComponentType, string> = {
   title: 'Title',
+  content: 'Content',
   box: 'Box',
   arrow: 'Arrow',
   highlight: 'Highlight',

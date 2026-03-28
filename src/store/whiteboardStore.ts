@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown';
+export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown';
 
 export type CanvasType = 'whiteboard' | 'doc-white' | 'doc-dark';
 
@@ -34,6 +34,7 @@ let nextId = 1;
 
 const defaultProps: Record<ComponentType, (count: number) => Record<string, any>> = {
   title: (n) => ({ text: 'Title ' + n, x: 200, y: 100 + n * 60 }),
+  content: (n) => ({ text: '**Bold** and *italic* content', x: 200, y: 100 + n * 60, fontSize: 32 }),
   box: (n) => ({ text: 'Box ' + n, x: 300, y: 200 + n * 40, width: 200, height: 120 }),
   arrow: (n) => ({ startX: 200, startY: 300 + n * 30, endX: 500, endY: 300 + n * 30 }),
   highlight: (n) => ({ x: 150, y: 150 + n * 40, width: 250, height: 18, color: 'hsl(48 100% 67%)' }),

@@ -97,7 +97,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation' && comp.type !== 'noteBox' && comp.type !== 'markdown')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'content' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation' && comp.type !== 'noteBox' && comp.type !== 'markdown')) return;
       setEditingId(id);
       setEditField('text');
       setEditText(comp.props.text || '');
@@ -402,7 +402,7 @@ const Canvas: React.FC = () => {
             )}
 
             {components.map((comp) => {
-              if (comp.type === 'title') {
+              if (comp.type === 'title' || comp.type === 'content') {
                 return (
                   <TitleComponent
                     key={comp.id}
