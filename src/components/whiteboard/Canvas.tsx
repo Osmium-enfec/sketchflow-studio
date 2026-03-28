@@ -277,7 +277,7 @@ const Canvas: React.FC = () => {
             if (svgRef.current) {
               playAnimation(svgRef.current, useWhiteboardStore.getState().components);
             }
-          }),
+          }, 'whiteboard-animation', useWhiteboardStore.getState().components),
           {
             loading: 'Recording animation... (will download when complete)',
             success: 'Recording downloaded!',
