@@ -1,6 +1,8 @@
 import femaleWalkingData from '@/assets/female-walking.json';
 import maleWalkingData from '@/assets/male-walking.json';
-import maleWalking2Data from '@/assets/male-walking-2.json';
+import happyBoyData from '@/assets/happy-boy.json';
+import talkingGreenManData from '@/assets/talking-green-man.json';
+import manRunningData from '@/assets/man-running.json';
 
 export interface LottieVariant {
   key: string;
@@ -15,7 +17,9 @@ export interface LottieVariant {
 export const LOTTIE_VARIANTS: LottieVariant[] = [
   { key: 'femaleWalking', label: 'Female Walking', data: femaleWalkingData, translates: true, facesRight: false },
   { key: 'maleWalking', label: 'Male Walking', data: maleWalkingData, translates: true, facesRight: true },
-  { key: 'maleWalking2', label: 'Male Walking 2', data: maleWalking2Data, translates: true, facesRight: true },
+  { key: 'happyBoy', label: 'Happy Boy', data: happyBoyData, translates: false, facesRight: true },
+  { key: 'talkingGreenMan', label: 'Talking Man', data: talkingGreenManData, translates: false, facesRight: true },
+  { key: 'manRunning', label: 'Man Running', data: manRunningData, translates: true, facesRight: true },
 ];
 
 export function getVariantData(key: string): LottieVariant {
