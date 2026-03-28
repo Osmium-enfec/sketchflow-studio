@@ -105,11 +105,20 @@ export const exportMP4 = (
     onStart();
     
     let capturing = true;
+    let lastCaptureTime = 0;
+    const CAPTURE_INTERVAL = 66; // ~15fps to avoid lag
 
-    const captureFrame = async () => {
+    const captureFrame = async (timestamp: number) => {
       if (!capturing) return;
+      
+      // Throttle: only capture every ~66ms (15fps)
+      if (timestamp - lastCaptureTime < CAPTURE_INTERVAL) {
+        requestAnimationFrame(captureFrame);
+        return;
+      }
+      lastCaptureTime = timestamp;
+
       try {
-        // Use html2canvas to capture the actual rendered DOM including Lottie animations
         const captureTarget = svgContainer || svgEl;
         const snapshot = await html2canvas(captureTarget as HTMLElement, {
           width: canvasW,
@@ -120,11 +129,13 @@ export const exportMP4 = (
           backgroundColor: null,
           logging: false,
           foreignObjectRendering: true,
+          imageTimeout: 0,
+          removeContainer: true,
         });
         ctx.clearRect(0, 0, canvasW, canvasH);
         ctx.drawImage(snapshot, 0, 0, canvasW, canvasH);
       } catch (_) {
-        // Fallback: draw blank frame rather than crash
+        // Skip frame on error
       }
       if (capturing) {
         requestAnimationFrame(captureFrame);
