@@ -117,7 +117,8 @@ export const exportMP4 = async (
 
   // 7. Download the MP4
   const output = await ffmpeg.readFile('output.mp4');
-  const mp4Blob = new Blob([(output as Uint8Array).buffer], { type: 'video/mp4' });
+  const outputData = output as Uint8Array;
+  const mp4Blob = new Blob([new Uint8Array(outputData)], { type: 'video/mp4' });
   const url = URL.createObjectURL(mp4Blob);
   const a = document.createElement('a');
   a.href = url;
