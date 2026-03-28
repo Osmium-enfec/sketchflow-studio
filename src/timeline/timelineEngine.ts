@@ -14,6 +14,7 @@ const DURATION: Record<string, number> = {
   foldedBox: 1.5,
   codeBox: 1.2,
   openPeep: 3.0,
+  documentation: 2.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -313,6 +314,57 @@ function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateDocumentation(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+
+  const shadow = el.querySelector('.doc-shadow');
+  const page = el.querySelector('.doc-page');
+  const header = el.querySelector('.doc-header');
+  const headerLine = el.querySelector('.doc-header-line');
+  const icon = el.querySelector('.doc-icon');
+  const titleText = el.querySelector('.doc-title-text');
+  const headingBg = el.querySelector('.doc-heading-bg');
+  const headingUnderline = el.querySelector('.doc-heading-underline');
+  const textLines = el.querySelectorAll('.doc-text-line');
+  const codeBlock = el.querySelector('.doc-code-block');
+  const codeLines = el.querySelectorAll('.doc-code-line');
+  const footerLine = el.querySelector('.doc-footer-line');
+  const footerText = el.querySelector('.doc-footer-text');
+
+  // Page slides in and fades
+  if (shadow) { gsap.set(shadow, { opacity: 0 }); tl.to(shadow, { opacity: 1, duration: 0.3 }, 0); }
+  if (page) { gsap.set(page, { opacity: 0, scaleY: 0.9, transformOrigin: 'top center' }); tl.to(page, { opacity: 1, scaleY: 1, duration: 0.5, ease: 'power2.out' }, 0); }
+
+  // Header
+  if (header) { gsap.set(header, { opacity: 0 }); tl.to(header, { opacity: 1, duration: 0.3 }, 0.2); }
+  if (headerLine) { gsap.set(headerLine, { opacity: 0 }); tl.to(headerLine, { opacity: 1, duration: 0.2 }, 0.3); }
+  if (icon) { gsap.set(icon, { opacity: 0, scale: 0 }); tl.to(icon, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.3); }
+  if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.4); }
+
+  // Heading
+  if (headingBg) { gsap.set(headingBg, { scaleX: 0, transformOrigin: 'left' }); tl.to(headingBg, { scaleX: 1, duration: 0.4, ease: 'power2.out' }, 0.5); }
+  if (headingUnderline) { gsap.set(headingUnderline, { scaleX: 0, transformOrigin: 'left' }); tl.to(headingUnderline, { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 0.6); }
+
+  // Text lines stagger
+  textLines.forEach((line, i) => {
+    gsap.set(line, { scaleX: 0, transformOrigin: 'left' });
+    tl.to(line, { scaleX: 1, duration: 0.2, ease: 'power1.out' }, 0.7 + i * 0.06);
+  });
+
+  // Code block
+  if (codeBlock) { gsap.set(codeBlock, { opacity: 0, scaleY: 0, transformOrigin: 'top' }); tl.to(codeBlock, { opacity: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' }, 1.2); }
+  codeLines.forEach((line, i) => {
+    gsap.set(line, { scaleX: 0, transformOrigin: 'left' });
+    tl.to(line, { scaleX: 1, duration: 0.2, ease: 'power1.out' }, 1.3 + i * 0.08);
+  });
+
+  // Footer
+  if (footerLine) { gsap.set(footerLine, { opacity: 0 }); tl.to(footerLine, { opacity: 1, duration: 0.2 }, 1.6); }
+  if (footerText) { gsap.set(footerText, { opacity: 0 }); tl.to(footerText, { opacity: 1, duration: 0.2 }, 1.7); }
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
@@ -326,6 +378,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   foldedBox: animateFoldedBox,
   codeBox: animateCodeBox,
   openPeep: animateOpenPeep,
+  documentation: animateDocumentation,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
