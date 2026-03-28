@@ -366,6 +366,35 @@ function animateDocumentation(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
+function animateNoteBox(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+
+  const bg = el.querySelector('.note-bg');
+  const leftBar = el.querySelector('.note-left-bar');
+  const leftBarOverlay = el.querySelector('.note-left-bar-overlay');
+  const icon = el.querySelector('.note-icon');
+  const titleText = el.querySelector('.note-title-text');
+  const contentText = el.querySelector('.note-content-text');
+
+  // Slide in background
+  if (bg) { gsap.set(bg, { opacity: 0, scaleX: 0.8, transformOrigin: 'left center' }); tl.to(bg, { opacity: 1, scaleX: 1, duration: 0.4, ease: 'power2.out' }, 0); }
+  
+  // Left bar grows down
+  if (leftBar) { gsap.set(leftBar, { scaleY: 0, transformOrigin: 'top' }); tl.to(leftBar, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0.1); }
+  if (leftBarOverlay) { gsap.set(leftBarOverlay, { scaleY: 0, transformOrigin: 'top' }); tl.to(leftBarOverlay, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0.1); }
+
+  // Icon pops in
+  if (icon) { gsap.set(icon, { opacity: 0, scale: 0 }); tl.to(icon, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.3); }
+
+  // Title fades in
+  if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.4); }
+
+  // Content fades in
+  if (contentText) { gsap.set(contentText, { opacity: 0 }); tl.to(contentText, { opacity: 1, duration: 0.4 }, 0.6); }
+
+  return tl;
+}
+
 const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   title: animateTitle,
   box: animateBox,
