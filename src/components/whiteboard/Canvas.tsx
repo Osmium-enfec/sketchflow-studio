@@ -15,7 +15,13 @@ import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
+import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
+
+const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
+const NOTE_SWATCH_COLORS: Record<string, string> = {
+  green: '#16a34a', blue: '#2563eb', yellow: '#ca8a04', red: '#dc2626', purple: '#9333ea',
+};
 
 // A4 at 150 DPI ≈ 1240 × 1754
 const CANVAS_PRESETS = {
@@ -255,6 +261,24 @@ const Canvas: React.FC = () => {
               style={{
                 backgroundColor: color,
                 borderColor: (selectedComp.props.color || (selectedComp.type === 'title' ? TITLE_COLORS[0] : HIGHLIGHT_COLORS[0])) === color ? 'hsl(0 0% 7%)' : 'transparent',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Color picker for noteBox */}
+      {selectedComp && selectedComp.type === 'noteBox' && (
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-card border rounded-lg shadow-sm p-2">
+          <span className="text-xs text-muted-foreground font-medium">Color:</span>
+          {NOTE_COLOR_KEYS.map((key) => (
+            <button
+              key={key}
+              onClick={() => updateComponentProps(selectedComp.id, { noteColor: key })}
+              className="w-6 h-6 rounded-full border-2 transition-transform hover:scale-110"
+              style={{
+                backgroundColor: NOTE_SWATCH_COLORS[key],
+                borderColor: (selectedComp.props.noteColor || 'green') === key ? 'hsl(0 0% 7%)' : 'transparent',
               }}
             />
           ))}

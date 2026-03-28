@@ -12,6 +12,29 @@ interface Props {
 const BASE_WIDTH = 460;
 const BASE_HEIGHT = 140;
 
+export const NOTE_COLOR_THEMES: Record<string, { light: Record<string, string>; dark: Record<string, string> }> = {
+  green: {
+    light: { bg: '#f0fdf4', border: '#bbf7d0', bar: '#16a34a', title: '#14532d', content: '#166534', icon: '#15803d' },
+    dark: { bg: '#1a2e1a', border: '#2d4a2d', bar: '#22c55e', title: '#bbf7d0', content: '#86efac', icon: '#4ade80' },
+  },
+  blue: {
+    light: { bg: '#eff6ff', border: '#bfdbfe', bar: '#2563eb', title: '#1e3a5f', content: '#1e40af', icon: '#3b82f6' },
+    dark: { bg: '#1a2332', border: '#1e3a5f', bar: '#3b82f6', title: '#bfdbfe', content: '#93c5fd', icon: '#60a5fa' },
+  },
+  yellow: {
+    light: { bg: '#fefce8', border: '#fef08a', bar: '#ca8a04', title: '#713f12', content: '#854d0e', icon: '#eab308' },
+    dark: { bg: '#2e2a1a', border: '#4a3f1a', bar: '#eab308', title: '#fef08a', content: '#fde047', icon: '#facc15' },
+  },
+  red: {
+    light: { bg: '#fef2f2', border: '#fecaca', bar: '#dc2626', title: '#7f1d1d', content: '#991b1b', icon: '#ef4444' },
+    dark: { bg: '#2e1a1a', border: '#4a1a1a', bar: '#ef4444', title: '#fecaca', content: '#fca5a5', icon: '#f87171' },
+  },
+  purple: {
+    light: { bg: '#faf5ff', border: '#e9d5ff', bar: '#9333ea', title: '#4c1d95', content: '#6b21a8', icon: '#a855f7' },
+    dark: { bg: '#261a2e', border: '#3b1a4a', bar: '#a855f7', title: '#e9d5ff', content: '#d8b4fe', icon: '#c084fc' },
+  },
+};
+
 const NoteBoxComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick, onResizeStart }) => {
   const {
     x, y,
@@ -20,17 +43,19 @@ const NoteBoxComponent: React.FC<Props> = ({ component, isSelected, onMouseDown,
     noteTitle = 'Note',
     noteContent = 'Your note content goes here.',
     variant = 'light',
+    noteColor = 'green',
   } = component.props;
 
   const isDark = variant === 'dark';
   const scale = width / BASE_WIDTH;
 
-  const bgColor = isDark ? '#1a2e1a' : '#f0fdf4';
-  const borderColor = isDark ? '#2d4a2d' : '#bbf7d0';
-  const leftBarColor = isDark ? '#22c55e' : '#16a34a';
-  const titleColor = isDark ? '#bbf7d0' : '#14532d';
-  const contentColor = isDark ? '#86efac' : '#166534';
-  const iconColor = isDark ? '#4ade80' : '#15803d';
+  const theme = NOTE_COLOR_THEMES[noteColor]?.[isDark ? 'dark' : 'light'] || NOTE_COLOR_THEMES.green[isDark ? 'dark' : 'light'];
+  const bgColor = theme.bg;
+  const borderColor = theme.border;
+  const leftBarColor = theme.bar;
+  const titleColor = theme.title;
+  const contentColor = theme.content;
+  const iconColor = theme.icon;
 
   const titleFontSize = Math.round(16 * scale);
   const contentFontSize = Math.round(13 * scale);
