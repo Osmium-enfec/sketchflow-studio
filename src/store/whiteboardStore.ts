@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown';
+export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown' | 'lottieCharacter';
 
 export type CanvasType = 'whiteboard' | 'doc-white' | 'doc-dark';
 
@@ -50,6 +50,7 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   noteBox: (n) => ({ x: 300 + n * 20, y: 200 + n * 20, width: 460, height: 140, noteTitle: 'Note', noteContent: 'Your note content goes here.', variant: 'light' }),
   docCodeBlock: (n) => ({ x: 300 + n * 20, y: 250 + n * 20, width: 520, height: 200, codeTitle: 'polls/views.py', codeContent: 'from django.http import HttpResponse\n\ndef index(request):\n    return HttpResponse("Hello, world.")', variant: 'light' }),
   markdown: (n) => ({ x: 300 + n * 20, y: 200 + n * 20, width: 400, height: 300, markdownContent: '# Hello World\n\nWrite your **markdown** here.\n\n- Item 1\n- Item 2\n\n```\ncode block\n```', variant: 'light' }),
+  lottieCharacter: (n) => ({ x: 300 + n * 20, y: 150 + n * 20, width: 300, height: 300, lottiePreset: 'walking' }),
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage, FileCode2, Shapes } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage, FileCode2, Shapes, Film } from 'lucide-react';
 import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -280,6 +280,28 @@ const TopToolbar: React.FC = () => {
               <button onClick={() => { addComponent('openPeep', { variant: 'buttonShirt', scale: 1 }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
+              </button>
+              <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie</div>
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'walking' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Walking
+              </button>
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'waving' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Waving
+              </button>
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'thinking' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Thinking
+              </button>
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'celebrating' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Celebrating
+              </button>
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'coding' }); closeAll(); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Film className="h-4 w-4 text-muted-foreground" /> Coding
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>
