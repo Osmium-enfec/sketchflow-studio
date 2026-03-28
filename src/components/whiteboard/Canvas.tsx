@@ -337,7 +337,8 @@ const Canvas: React.FC = () => {
         </div>
       )}
 
-      <div ref={containerRef} className="w-full h-full overflow-auto flex items-center justify-center p-4">
+      <div ref={containerRef} className="w-full h-full overflow-auto p-4">
+        <div className="min-w-full min-h-full flex items-start justify-center">
         <div
           className="shadow-lg rounded-xl overflow-hidden border shrink-0"
           style={{
