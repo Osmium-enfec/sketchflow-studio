@@ -469,5 +469,9 @@ export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardCompon
     currentTime = startTime + (DURATION[comp.type] || 1);
   });
 
+  master.eventCallback('onComplete', () => {
+    window.dispatchEvent(new CustomEvent('whiteboard-animation-end'));
+  });
+
   master.play(0);
 }
