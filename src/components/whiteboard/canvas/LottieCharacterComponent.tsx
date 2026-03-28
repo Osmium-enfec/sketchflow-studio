@@ -1,30 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import Lottie from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { getLottieData } from '@/lib/lottiePresets';
 
-// Built-in Lottie animation URLs from LottieFiles CDN
-export const LOTTIE_PRESETS: Record<string, { label: string; url: string }> = {
-  walking: {
-    label: 'Walking',
-    url: 'https://lottie.host/2a61b1ad-2d1c-4783-87ff-d5a8c20f15a0/sFJxSQP1LT.json',
-  },
-  waving: {
-    label: 'Waving',
-    url: 'https://lottie.host/f8a350dd-09ad-43d3-ac13-3d4b88b45e05/kKaFMZKgkP.json',
-  },
-  thinking: {
-    label: 'Thinking',
-    url: 'https://lottie.host/cfc41569-cb96-43cf-9b02-e12a1c2f1e42/WXkiKHrIYF.json',
-  },
-  celebrating: {
-    label: 'Celebrating',
-    url: 'https://lottie.host/b18b46e8-5ec6-41f6-b070-e4c4a8df49c9/1HpnJJQ5yE.json',
-  },
-  coding: {
-    label: 'Coding',
-    url: 'https://lottie.host/ddb0bbb1-ea52-4990-8a8e-c2b31dbb5e88/fQdLh4bLBd.json',
-  },
-};
+export const LOTTIE_PRESET_LIST = [
+  { value: 'bouncing', label: 'Bouncing' },
+  { value: 'pulse', label: 'Pulse' },
+  { value: 'spinner', label: 'Spinner' },
+  { value: 'checkmark', label: 'Checkmark' },
+  { value: 'waveform', label: 'Waveform' },
+];
 
 interface Props {
   component: WhiteboardComponent;
@@ -34,19 +19,8 @@ interface Props {
 }
 
 const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onResizeStart }) => {
-  const { x, y, width = 300, height = 300, lottiePreset = 'walking', lottieUrl } = component.props;
-  const [animationData, setAnimationData] = useState<any>(null);
-
-  const resolvedUrl = lottieUrl || LOTTIE_PRESETS[lottiePreset]?.url || LOTTIE_PRESETS.walking.url;
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(resolvedUrl)
-      .then(r => r.json())
-      .then(data => { if (!cancelled) setAnimationData(data); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, [resolvedUrl]);
+  const { x, y, width = 300, height = 300, lottiePreset = 'bouncing' } = component.props;
+  const animationData = useMemo(() => getLottieData(lottiePreset), [lottiePreset]);
 
   const handles = ['se', 'sw', 'ne', 'nw'];
   const handlePositions: Record<string, { cx: number; cy: number }> = {
@@ -67,28 +41,12 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
         <div style={{ width, height, pointerEvents: 'all' }}>
-          {animationData ? (
-            <Lottie
-              animationData={animationData}
-              loop
-              autoplay
-              style={{ width: '100%', height: '100%' }}
-            />
-          ) : (
-            <div style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0,0,0,0.05)',
-              borderRadius: 8,
-              fontSize: 14,
-              color: '#888',
-            }}>
-              Loading...
-            </div>
-          )}
+          <Lottie
+            animationData={animationData}
+            loop
+            autoplay
+            style={{ width: '100%', height: '100%' }}
+          />
         </div>
       </foreignObject>
 
