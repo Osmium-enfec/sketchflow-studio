@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { CanvasRenderer } from './canvasRenderer';
+import { WhiteboardComponent } from '@/store/whiteboardStore';
 
 /**
  * Serialize SVG to a data URL image, then resolve with the rendered canvas.
@@ -50,21 +51,27 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 };
 
 /**
- * Record the canvas animation as WebM using MediaRecorder.
- * Uses html2canvas to capture the actual rendered DOM (including foreignObject / Lottie).
+ * Record the canvas animation as WebM using offscreen Canvas rendering.
+ * Uses CanvasRenderer to draw SVG content + Lottie characters programmatically,
+ * avoiding html2canvas viewport/alignment issues.
  */
 export const exportMP4 = (
   svgEl: SVGSVGElement,
   canvasW: number,
   canvasH: number,
   onStart: () => void,
-  fileName = 'whiteboard-animation'
+  fileName = 'whiteboard-animation',
+  components: WhiteboardComponent[] = []
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const recCanvas = document.createElement('canvas');
-    recCanvas.width = canvasW;
-    recCanvas.height = canvasH;
-    const ctx = recCanvas.getContext('2d')!;
+    const renderer = new CanvasRenderer(canvasW, canvasH);
+    const recCanvas = renderer.getCanvas();
+
+    // Initialize offscreen Lottie instances for walking characters
+    renderer.initLottieInstances(components);
+
+    // Hook DOM lottie controls to sync offscreen instances
+    renderer.hookDomControls(svgEl, components);
 
     const stream = recCanvas.captureStream(30);
     
@@ -86,6 +93,7 @@ export const exportMP4 = (
     
     recorder.onstop = () => {
       capturing = false;
+      renderer.destroy();
       const blob = new Blob(chunks, { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -96,17 +104,17 @@ export const exportMP4 = (
       resolve();
     };
 
-    recorder.onerror = (e) => reject(e);
-    
-    // Target the SVG's direct parent div (the sized container)
-    const svgWrapper = svgEl.parentElement as HTMLElement;
-    
+    recorder.onerror = (e) => {
+      renderer.destroy();
+      reject(e);
+    };
+
     recorder.start();
     onStart();
     
     let capturing = true;
     let lastCaptureTime = 0;
-    const CAPTURE_INTERVAL = 66; // ~15fps
+    const CAPTURE_INTERVAL = 33; // ~30fps
 
     const captureFrame = async (timestamp: number) => {
       if (!capturing) return;
@@ -118,29 +126,7 @@ export const exportMP4 = (
       lastCaptureTime = timestamp;
 
       try {
-        const target = svgWrapper || svgEl;
-        const rect = target.getBoundingClientRect();
-        
-        const snapshot = await html2canvas(target as HTMLElement, {
-          width: rect.width,
-          height: rect.height,
-          scale: canvasW / rect.width, // Scale up to full canvas resolution
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          foreignObjectRendering: true,
-          imageTimeout: 0,
-          removeContainer: true,
-          x: 0,
-          y: 0,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: rect.width,
-          windowHeight: rect.height,
-        });
-        ctx.clearRect(0, 0, canvasW, canvasH);
-        ctx.drawImage(snapshot, 0, 0, canvasW, canvasH);
+        await renderer.renderFrame(svgEl);
       } catch (_) {
         // Skip frame on error
       }
@@ -161,6 +147,7 @@ export const exportMP4 = (
     
     window.addEventListener('whiteboard-animation-end', onEnd);
     
+    // Safety timeout: max 60s recording
     setTimeout(() => {
       if (recorder.state === 'recording') {
         capturing = false;
