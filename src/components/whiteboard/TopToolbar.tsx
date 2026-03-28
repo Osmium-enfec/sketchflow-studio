@@ -84,12 +84,6 @@ const TopToolbar: React.FC = () => {
         <Button variant="ghost" size="sm" onClick={() => addComponent('title')} className="gap-1.5">
           <Type className="h-4 w-4" /> Title
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown', { variant: 'light' })} className="gap-1.5">
-          <FileCode2 className="h-4 w-4" /> MD ☀️
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown', { variant: 'dark' })} className="gap-1.5">
-          <FileCode2 className="h-4 w-4" /> MD 🌙
-        </Button>
 
         {/* Boxes dropdown */}
         <div className="relative" ref={boxesRef}>
@@ -175,6 +169,16 @@ const TopToolbar: React.FC = () => {
               <button onClick={() => { addComponent('docCodeBlock', { variant: 'dark' }); setDocsOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 rounded border bg-slate-900 flex items-center justify-center text-[6px] font-mono text-blue-400">{'{}'}</div> Dark Code
+              </button>
+              <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Markdown</div>
+              <button onClick={() => { addComponent('markdown', { variant: 'light' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <FileCode2 className="h-4 w-4 text-muted-foreground" /> Light Markdown
+              </button>
+              <button onClick={() => { addComponent('markdown', { variant: 'dark' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <FileCode2 className="h-4 w-4 text-muted-foreground" /> Dark Markdown
               </button>
             </div>
           )}
