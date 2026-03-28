@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 /**
  * Serialize SVG to a data URL image, then resolve with the rendered canvas.
@@ -31,8 +32,7 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
   const isPortrait = canvasH > canvasW;
   const orientation = isPortrait ? 'portrait' : 'landscape';
   
-  // Use the actual canvas aspect ratio
-  const pdfWidth = isPortrait ? 210 : 297; // A4 mm
+  const pdfWidth = isPortrait ? 210 : 297;
   const pdfHeight = isPortrait ? 297 : 210;
   
   const scale = Math.min(pdfWidth / canvasW, pdfHeight / canvasH);
@@ -50,8 +50,8 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 };
 
 /**
- * Record the canvas animation as MP4 using MediaRecorder.
- * Captures frames by repeatedly drawing the SVG onto a canvas.
+ * Record the canvas animation as WebM using MediaRecorder.
+ * Uses html2canvas to capture the actual rendered DOM (including foreignObject / Lottie).
  */
 export const exportMP4 = (
   svgEl: SVGSVGElement,
@@ -66,9 +66,8 @@ export const exportMP4 = (
     recCanvas.height = canvasH;
     const ctx = recCanvas.getContext('2d')!;
 
-    const stream = recCanvas.captureStream(30); // 30 fps
+    const stream = recCanvas.captureStream(30);
     
-    // Check for supported mime types
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
       : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
@@ -77,7 +76,7 @@ export const exportMP4 = (
     
     const recorder = new MediaRecorder(stream, {
       mimeType,
-      videoBitsPerSecond: 8_000_000, // 8 Mbps for high quality
+      videoBitsPerSecond: 8_000_000,
     });
     
     const chunks: Blob[] = [];
@@ -86,7 +85,7 @@ export const exportMP4 = (
     };
     
     recorder.onstop = () => {
-      cancelAnimationFrame(frameId);
+      capturing = false;
       const blob = new Blob(chunks, { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -99,45 +98,54 @@ export const exportMP4 = (
 
     recorder.onerror = (e) => reject(e);
     
-    // Start recording
-    recorder.start();
+    // Find the parent container that holds the SVG (the actual rendered DOM element)
+    const svgContainer = svgEl.closest('.whiteboard-canvas-container') || svgEl.parentElement;
     
-    // Trigger the animation
+    recorder.start();
     onStart();
     
-    // Capture frames
-    let frameId: number;
-    const captureFrame = () => {
-      const svgData = new XMLSerializer().serializeToString(svgEl);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-      const img = new Image();
-      img.onload = () => {
+    let capturing = true;
+
+    const captureFrame = async () => {
+      if (!capturing) return;
+      try {
+        // Use html2canvas to capture the actual rendered DOM including Lottie animations
+        const captureTarget = svgContainer || svgEl;
+        const snapshot = await html2canvas(captureTarget as HTMLElement, {
+          width: canvasW,
+          height: canvasH,
+          scale: 1,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null,
+          logging: false,
+          foreignObjectRendering: true,
+        });
         ctx.clearRect(0, 0, canvasW, canvasH);
-        ctx.drawImage(img, 0, 0, canvasW, canvasH);
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
-      frameId = requestAnimationFrame(captureFrame);
+        ctx.drawImage(snapshot, 0, 0, canvasW, canvasH);
+      } catch (_) {
+        // Fallback: draw blank frame rather than crash
+      }
+      if (capturing) {
+        requestAnimationFrame(captureFrame);
+      }
     };
     
-    frameId = requestAnimationFrame(captureFrame);
+    requestAnimationFrame(captureFrame);
     
-    // Listen for animation end — stop after a timeout based on component count
-    // The animation engine dispatches 'whiteboard-animation-end' when done
     const onEnd = () => {
-      // Give a small buffer for the last frames
       setTimeout(() => {
-        recorder.stop();
+        capturing = false;
+        if (recorder.state === 'recording') recorder.stop();
         window.removeEventListener('whiteboard-animation-end', onEnd);
       }, 500);
     };
     
     window.addEventListener('whiteboard-animation-end', onEnd);
     
-    // Safety timeout: stop after 60 seconds max
     setTimeout(() => {
       if (recorder.state === 'recording') {
+        capturing = false;
         recorder.stop();
         window.removeEventListener('whiteboard-animation-end', onEnd);
       }
