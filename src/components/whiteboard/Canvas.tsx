@@ -260,28 +260,49 @@ const Canvas: React.FC = () => {
           className="fixed z-50"
           style={{ left: editPos.x, top: editPos.y }}
         >
-          {editField === 'codeContent' ? (
-            <textarea
-              autoFocus
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={commitEdit}
-              onKeyDown={(e) => { if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
-              className="px-2 py-1 border-2 border-primary rounded bg-background text-foreground font-mono text-sm outline-none resize"
-              style={{ width: Math.max(300, editPos.width), minHeight: 120 }}
-              rows={8}
-            />
-          ) : (
-            <input
-              autoFocus
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={commitEdit}
-              onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
-              className="px-2 py-1 border-2 border-primary rounded bg-background text-foreground font-['Patrick_Hand'] text-lg outline-none"
-              style={{ width: Math.max(200, editPos.width) }}
-            />
-          )}
+          {(() => {
+            const editComp = components.find(c => c.id === editingId);
+            const isDarkComp = editComp?.props?.variant === 'dark';
+            const isCodeField = editField === 'codeContent';
+            const isCodeOrNote = editComp?.type === 'docCodeBlock' || editComp?.type === 'noteBox';
+            const bgColor = isCodeOrNote && isDarkComp ? '#0b2e1f' : isCodeOrNote ? '#f8faf9' : undefined;
+            const textColor = isCodeOrNote && isDarkComp ? '#e2e8f0' : isCodeOrNote ? '#1e293b' : undefined;
+            const borderColor = isCodeOrNote && isDarkComp ? '#0C4B33' : undefined;
+
+            return isCodeField ? (
+              <textarea
+                autoFocus
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={(e) => { if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
+                className="px-2 py-1 border-2 rounded font-mono text-sm outline-none resize"
+                style={{
+                  width: Math.max(300, editPos.width),
+                  minHeight: 120,
+                  backgroundColor: bgColor || 'hsl(var(--background))',
+                  color: textColor || 'hsl(var(--foreground))',
+                  borderColor: borderColor || 'hsl(var(--primary))',
+                }}
+                rows={8}
+              />
+            ) : (
+              <input
+                autoFocus
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
+                className="px-2 py-1 border-2 rounded font-mono text-sm outline-none"
+                style={{
+                  width: Math.max(200, editPos.width),
+                  backgroundColor: bgColor || 'hsl(var(--background))',
+                  color: textColor || 'hsl(var(--foreground))',
+                  borderColor: borderColor || 'hsl(var(--primary))',
+                }}
+              />
+            );
+          })()}
         </div>
       )}
 
