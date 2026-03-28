@@ -72,21 +72,32 @@ export const exportMP4 = async (
 ): Promise<void> => {
   const FPS = 30;
 
+  console.log('[exportMP4] Starting export', { canvasW, canvasH, componentCount: components.length });
+
   // 1. Setup offscreen renderer + lottie instances
   const renderer = new CanvasRenderer(canvasW, canvasH);
   renderer.initLottieInstances(components);
+  console.log('[exportMP4] Renderer initialized');
 
   // 2. Replace DOM lottie controls with deterministic state trackers
-  //    (must happen BEFORE building the timeline)
   renderer.setupDeterministicControls(svgEl, components);
 
   // 3. Build paused GSAP timeline
   const timeline = buildTimeline(svgEl, components);
   const duration = timeline.duration();
   const totalFrames = Math.ceil(duration * FPS) + 1;
+  console.log('[exportMP4] Timeline built', { duration, totalFrames });
+
+  if (duration <= 0 || totalFrames <= 0) {
+    renderer.destroy();
+    timeline.kill();
+    throw new Error('Timeline has no duration — nothing to export');
+  }
 
   // 4. Load FFmpeg.wasm (cached after first load)
+  console.log('[exportMP4] Loading FFmpeg...');
   const ffmpeg = await loadFFmpeg();
+  console.log('[exportMP4] FFmpeg loaded');
 
   // 5. Render each frame deterministically
   for (let f = 0; f < totalFrames; f++) {
