@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen } from 'lucide-react';
-import { useWhiteboardStore } from '@/store/whiteboardStore';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout } from 'lucide-react';
+import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
 const TopToolbar: React.FC = () => {
-  const { addComponent, isPlaying, setPlaying, selectedId, removeComponent } = useWhiteboardStore();
+  const { addComponent, isPlaying, setPlaying, selectedId, removeComponent, canvasType, setCanvasType } = useWhiteboardStore();
   const [androidOpen, setAndroidOpen] = useState(false);
   const [arrowsOpen, setArrowsOpen] = useState(false);
   const [boxesOpen, setBoxesOpen] = useState(false);
   const [charsOpen, setCharsOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const [docSubOpen, setDocSubOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);

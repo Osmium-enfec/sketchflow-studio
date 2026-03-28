@@ -325,18 +325,22 @@ const Canvas: React.FC = () => {
             ref={svgRef}
             viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
             className="w-full h-full"
-            style={{ backgroundColor: 'hsl(43 100% 98%)' }}
+            style={{ backgroundColor: preset.bg }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClick={(e) => { if (e.target === e.currentTarget) { selectComponent(null); if (editingId) commitEdit(); } }}
           >
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="hsl(0 0% 85%)" />
-              </pattern>
-            </defs>
-            <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+            {preset.grid && (
+              <>
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill={preset.gridColor} />
+                  </pattern>
+                </defs>
+                <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+              </>
+            )}
 
             {components.map((comp) => {
               if (comp.type === 'title') {
