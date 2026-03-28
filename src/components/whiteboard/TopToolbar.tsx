@@ -84,8 +84,11 @@ const TopToolbar: React.FC = () => {
         <Button variant="ghost" size="sm" onClick={() => addComponent('title')} className="gap-1.5">
           <Type className="h-4 w-4" /> Title
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown')} className="gap-1.5">
-          <FileCode2 className="h-4 w-4" /> Markdown
+        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown', { variant: 'light' })} className="gap-1.5">
+          <FileCode2 className="h-4 w-4" /> MD ☀️
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => addComponent('markdown', { variant: 'dark' })} className="gap-1.5">
+          <FileCode2 className="h-4 w-4" /> MD 🌙
         </Button>
 
         {/* Boxes dropdown */}
