@@ -16,6 +16,7 @@ import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import MarkdownComponent from './canvas/MarkdownComponent';
+import LottieCharacterComponent from './canvas/LottieCharacterComponent';
 import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
