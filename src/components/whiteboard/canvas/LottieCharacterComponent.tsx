@@ -1,15 +1,11 @@
-import React, { useMemo, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import { getLottieData } from '@/lib/lottiePresets';
+import { getLottieData, getLottieUrl, LOTTIE_PRESETS } from '@/lib/lottiePresets';
 
-export const LOTTIE_PRESET_LIST = [
-  { value: 'bouncing', label: 'Bouncing Ball' },
-  { value: 'pulse', label: 'Pulse' },
-  { value: 'spinner', label: 'Spinner' },
-  { value: 'checkmark', label: 'Checkmark' },
-  { value: 'waveform', label: 'Waveform' },
-];
+export const LOTTIE_PRESET_LIST = Object.entries(LOTTIE_PRESETS)
+  .filter(([key]) => key !== 'custom')
+  .map(([value, info]) => ({ value, label: info.label, category: info.category }));
 
 interface Props {
   component: WhiteboardComponent;
@@ -22,29 +18,21 @@ const LottieInner: React.FC<{ animationData: any; width: number; height: number 
   const { View, goToAndStop, play, stop, setSpeed } = useLottie({
     animationData,
     loop: true,
-    autoplay: false, // Don't autoplay — controlled by timeline
+    autoplay: false,
     style: { width: '100%', height: '100%' },
   });
 
-  // Expose play/stop via DOM data attributes so timeline engine can control it
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
-    // Store control functions on the DOM element for timeline access
     (el as any).__lottiePlay = play;
     (el as any).__lottieStop = stop;
     (el as any).__lottieGoTo = goToAndStop;
     (el as any).__lottieSetSpeed = setSpeed;
-
-    // Start paused at frame 0
     goToAndStop(0, true);
-
-    return () => {
-      stop();
-    };
+    return () => { stop(); };
   }, [play, stop, goToAndStop, setSpeed]);
 
   return (
@@ -55,8 +43,44 @@ const LottieInner: React.FC<{ animationData: any; width: number; height: number 
 };
 
 const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onResizeStart }) => {
-  const { x, y, width = 300, height = 300, lottiePreset = 'bouncing' } = component.props;
-  const animationData = useMemo(() => getLottieData(lottiePreset), [lottiePreset]);
+  const { x, y, width = 300, height = 300, lottiePreset = 'bouncing', lottieUrl: customUrl } = component.props;
+  const [remoteData, setRemoteData] = useState<object | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Inline data for inline presets
+  const inlineData = useMemo(() => getLottieData(lottiePreset), [lottiePreset]);
+
+  // Fetch remote URL data
+  useEffect(() => {
+    const url = getLottieUrl(lottiePreset, customUrl);
+    if (!url) {
+      setRemoteData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setRemoteData(null);
+
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        setRemoteData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [lottiePreset, customUrl]);
+
+  const animationData = inlineData || remoteData;
 
   const handles = ['se', 'sw', 'ne', 'nw'];
   const handlePositions: Record<string, { cx: number; cy: number }> = {
@@ -76,7 +100,22 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
         onMouseDown={onMouseDown}
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
-        <LottieInner animationData={animationData} width={width} height={height} />
+        {loading ? (
+          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: 14, fontFamily: 'sans-serif' }}>Loading...</div>
+          </div>
+        ) : error ? (
+          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
+            <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'sans-serif' }}>Failed to load</div>
+            <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'sans-serif' }}>{error}</div>
+          </div>
+        ) : animationData ? (
+          <LottieInner animationData={animationData} width={width} height={height} />
+        ) : (
+          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: 13, fontFamily: 'sans-serif' }}>No animation</div>
+          </div>
+        )}
       </foreignObject>
 
       {isSelected && (
