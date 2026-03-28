@@ -15,6 +15,7 @@ import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
 import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
+import MarkdownComponent from './canvas/MarkdownComponent';
 import { NOTE_COLOR_THEMES } from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
@@ -96,7 +97,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation' && comp.type !== 'noteBox')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation' && comp.type !== 'noteBox' && comp.type !== 'markdown')) return;
       setEditingId(id);
       setEditField('text');
       setEditText(comp.props.text || '');
@@ -174,7 +175,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation' || comp.type === 'noteBox' || comp.type === 'docCodeBlock' || comp.type === 'markdown') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -591,6 +592,35 @@ const Canvas: React.FC = () => {
                     editText={isEditingThis ? editText : undefined}
                     onEditChange={(text) => setEditText(text)}
                     onEditCommit={commitEdit}
+                  />
+                );
+              }
+              if (comp.type === 'markdown') {
+                const isEditingThis = editingId === comp.id;
+                return (
+                  <MarkdownComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    isEditing={isEditingThis}
+                    editText={isEditingThis ? editText : undefined}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(comp.id);
+                      setEditField('markdownContent');
+                      setEditText(comp.props.markdownContent || '');
+                    }}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                    onEditChange={(text) => setEditText(text)}
+                    onEditCommit={() => {
+                      if (editingId && editText !== undefined) {
+                        updateComponentProps(editingId, { markdownContent: editText });
+                      }
+                      setEditingId(null);
+                      setEditPos(null);
+                      setEditField('text');
+                    }}
                   />
                 );
               }
