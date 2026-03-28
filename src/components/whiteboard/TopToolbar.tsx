@@ -1,36 +1,44 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage, FileCode2 } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout, Download, FileVideo, FileImage, FileCode2, Shapes } from 'lucide-react';
 import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
 const TopToolbar: React.FC = () => {
   const { addComponent, isPlaying, setPlaying, selectedId, removeComponent, canvasType, setCanvasType } = useWhiteboardStore();
-  const [androidOpen, setAndroidOpen] = useState(false);
-  const [arrowsOpen, setArrowsOpen] = useState(false);
-  const [boxesOpen, setBoxesOpen] = useState(false);
-  const [charsOpen, setCharsOpen] = useState(false);
-  const [docsOpen, setDocsOpen] = useState(false);
   const [canvasOpen, setCanvasOpen] = useState(false);
   const [docSubOpen, setDocSubOpen] = useState(false);
   const [textOpen, setTextOpen] = useState(false);
   const [mdSubOpen, setMdSubOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const arrowsRef = useRef<HTMLDivElement>(null);
-  const boxesRef = useRef<HTMLDivElement>(null);
-  const charsRef = useRef<HTMLDivElement>(null);
-  const docsRef = useRef<HTMLDivElement>(null);
+  const [elementsOpen, setElementsOpen] = useState(false);
+  const [boxSubOpen, setBoxSubOpen] = useState(false);
+  const [arrowSubOpen, setArrowSubOpen] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(false);
+  const [charsOpen, setCharsOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
   const canvasRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
+  const elementsRef = useRef<HTMLDivElement>(null);
+  const docsRef = useRef<HTMLDivElement>(null);
+  const charsRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  const closeAll = () => {
+    setCanvasOpen(false); setDocSubOpen(false);
+    setTextOpen(false); setMdSubOpen(false);
+    setElementsOpen(false); setBoxSubOpen(false); setArrowSubOpen(false);
+    setDocsOpen(false); setCharsOpen(false); setExportOpen(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAndroidOpen(false);
-      if (arrowsRef.current && !arrowsRef.current.contains(e.target as Node)) setArrowsOpen(false);
-      if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
-      if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
-      if (docsRef.current && !docsRef.current.contains(e.target as Node)) setDocsOpen(false);
-      if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) { setCanvasOpen(false); setDocSubOpen(false); }
-      if (textRef.current && !textRef.current.contains(e.target as Node)) { setTextOpen(false); setMdSubOpen(false); }
+      const t = e.target as Node;
+      if (canvasRef.current && !canvasRef.current.contains(t)) { setCanvasOpen(false); setDocSubOpen(false); }
+      if (textRef.current && !textRef.current.contains(t)) { setTextOpen(false); setMdSubOpen(false); }
+      if (elementsRef.current && !elementsRef.current.contains(t)) { setElementsOpen(false); setBoxSubOpen(false); setArrowSubOpen(false); }
+      if (docsRef.current && !docsRef.current.contains(t)) setDocsOpen(false);
+      if (charsRef.current && !charsRef.current.contains(t)) setCharsOpen(false);
+      if (exportRef.current && !exportRef.current.contains(t)) setExportOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -42,12 +50,16 @@ const TopToolbar: React.FC = () => {
     </svg>
   );
 
+  const SubChevron = () => (
+    <svg className="h-3 w-3 -rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 5l3 3 3-3" /></svg>
+  );
+
   return (
     <div className="h-14 toolbar-bg border-b flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
         {/* Canvas type selector */}
         <div className="relative" ref={canvasRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setCanvasOpen(!canvasOpen); setDocSubOpen(false); }} className="gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setCanvasOpen(!canvasOpen); }} className="gap-1.5">
             <Layout className="h-4 w-4" />
             {canvasType === 'whiteboard' ? 'Whiteboard' : canvasType === 'doc-white' ? 'Doc (Light)' : 'Doc (Dark)'}
             <ChevronIcon open={canvasOpen} />
@@ -58,21 +70,18 @@ const TopToolbar: React.FC = () => {
                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'whiteboard' ? 'bg-muted font-medium' : ''}`}>
                 ✏️ Whiteboard
               </button>
-              <div className="relative"
-                onMouseEnter={() => setDocSubOpen(true)}
-                onMouseLeave={() => setDocSubOpen(false)}
-              >
+              <div className="relative" onMouseEnter={() => setDocSubOpen(true)} onMouseLeave={() => setDocSubOpen(false)}>
                 <button className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType.startsWith('doc') ? 'bg-muted font-medium' : ''}`}>
                   <span className="flex items-center gap-3">📄 Documentation (A4)</span>
-                  <svg className="h-3 w-3 -rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 5l3 3 3-3" /></svg>
+                  <SubChevron />
                 </button>
                 {docSubOpen && (
                   <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
-                    <button onClick={() => { setCanvasType('doc-white'); setCanvasOpen(false); setDocSubOpen(false); }}
+                    <button onClick={() => { setCanvasType('doc-white'); closeAll(); }}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'doc-white' ? 'font-medium' : ''}`}>
                       ☀️ White
                     </button>
-                    <button onClick={() => { setCanvasType('doc-dark'); setCanvasOpen(false); setDocSubOpen(false); }}
+                    <button onClick={() => { setCanvasType('doc-dark'); closeAll(); }}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'doc-dark' ? 'font-medium' : ''}`}>
                       🌙 Dark
                     </button>
@@ -82,40 +91,39 @@ const TopToolbar: React.FC = () => {
             </div>
           )}
         </div>
+
         <div className="h-6 w-px bg-border" />
         <span className="font-semibold text-lg tracking-tight mr-4">✏️ WhiteBoard</span>
         <div className="h-6 w-px bg-border" />
+
         {/* Text dropdown */}
         <div className="relative" ref={textRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setTextOpen(!textOpen); setBoxesOpen(false); setArrowsOpen(false); setAndroidOpen(false); setCharsOpen(false); setDocsOpen(false); setMdSubOpen(false); }} className="gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setTextOpen(!textOpen); }} className="gap-1.5">
             <Type className="h-4 w-4" /> Text <ChevronIcon open={textOpen} />
           </Button>
           {textOpen && (
             <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
-              <button onClick={() => { addComponent('title'); setTextOpen(false); }}
+              <button onClick={() => { addComponent('title'); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <Type className="h-4 w-4 text-muted-foreground" /> Title
               </button>
-              <button onClick={() => { addComponent('content'); setTextOpen(false); }}
+              <button onClick={() => { addComponent('content'); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <FileCode2 className="h-4 w-4 text-muted-foreground" /> Content
               </button>
               <div className="border-t my-1" />
-              <div className="relative"
-                onMouseEnter={() => setMdSubOpen(true)}
-                onMouseLeave={() => setMdSubOpen(false)}
-              >
+              <div className="relative" onMouseEnter={() => setMdSubOpen(true)} onMouseLeave={() => setMdSubOpen(false)}>
                 <button className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                   <span className="flex items-center gap-3"><FileCode2 className="h-4 w-4 text-muted-foreground" /> Markdown</span>
-                  <svg className="h-3 w-3 -rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 5l3 3 3-3" /></svg>
+                  <SubChevron />
                 </button>
                 {mdSubOpen && (
                   <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
-                    <button onClick={() => { addComponent('markdown', { variant: 'light' }); setTextOpen(false); setMdSubOpen(false); }}
+                    <button onClick={() => { addComponent('markdown', { variant: 'light' }); closeAll(); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                       ☀️ Light
                     </button>
-                    <button onClick={() => { addComponent('markdown', { variant: 'dark' }); setTextOpen(false); setMdSubOpen(false); }}
+                    <button onClick={() => { addComponent('markdown', { variant: 'dark' }); closeAll(); }}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                       🌙 Dark
                     </button>
@@ -126,88 +134,101 @@ const TopToolbar: React.FC = () => {
           )}
         </div>
 
-        {/* Boxes dropdown */}
-        <div className="relative" ref={boxesRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setBoxesOpen(!boxesOpen); setArrowsOpen(false); setAndroidOpen(false); }} className="gap-1.5">
-            <Square className="h-4 w-4" /> Box <ChevronIcon open={boxesOpen} />
+        {/* Elements dropdown (Box + Arrow + Highlight) */}
+        <div className="relative" ref={elementsRef}>
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setElementsOpen(!elementsOpen); }} className="gap-1.5">
+            <Shapes className="h-4 w-4" /> Elements <ChevronIcon open={elementsOpen} />
           </Button>
-          {boxesOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
-              <button onClick={() => { addComponent('box'); setBoxesOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Square className="h-4 w-4 text-muted-foreground" /> Sketch Box
-              </button>
-              <button onClick={() => { addComponent('foldedBox'); setBoxesOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <FileText className="h-4 w-4 text-muted-foreground" /> Folded Box
-              </button>
-              <button onClick={() => { addComponent('codeBox'); setBoxesOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Monitor className="h-4 w-4 text-muted-foreground" /> Code Box
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Arrows dropdown */}
-        <div className="relative" ref={arrowsRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setArrowsOpen(!arrowsOpen); setBoxesOpen(false); setAndroidOpen(false); }} className="gap-1.5">
-            <ArrowRight className="h-4 w-4" /> Arrow <ChevronIcon open={arrowsOpen} />
-          </Button>
-          {arrowsOpen && (
+          {elementsOpen && (
             <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
-              <button onClick={() => { addComponent('arrow'); setArrowsOpen(false); }}
+              {/* Box sub-menu */}
+              <div className="relative" onMouseEnter={() => setBoxSubOpen(true)} onMouseLeave={() => setBoxSubOpen(false)}>
+                <button className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                  <span className="flex items-center gap-3"><Square className="h-4 w-4 text-muted-foreground" /> Box</span>
+                  <SubChevron />
+                </button>
+                {boxSubOpen && (
+                  <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
+                    <button onClick={() => { addComponent('box'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <Square className="h-4 w-4 text-muted-foreground" /> Sketch Box
+                    </button>
+                    <button onClick={() => { addComponent('foldedBox'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <FileText className="h-4 w-4 text-muted-foreground" /> Folded Box
+                    </button>
+                    <button onClick={() => { addComponent('codeBox'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <Monitor className="h-4 w-4 text-muted-foreground" /> Code Box
+                    </button>
+                  </div>
+                )}
+              </div>
+              {/* Arrow sub-menu */}
+              <div className="relative" onMouseEnter={() => setArrowSubOpen(true)} onMouseLeave={() => setArrowSubOpen(false)}>
+                <button className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                  <span className="flex items-center gap-3"><ArrowRight className="h-4 w-4 text-muted-foreground" /> Arrow</span>
+                  <SubChevron />
+                </button>
+                {arrowSubOpen && (
+                  <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+                    <button onClick={() => { addComponent('arrow'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" /> Simple Arrow
+                    </button>
+                    <button onClick={() => { addComponent('gradientArrow'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <ArrowDown className="h-4 w-4 text-muted-foreground" /> Gradient Arrow
+                    </button>
+                    <button onClick={() => { addComponent('curvedArrow'); closeAll(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      <CornerDownRight className="h-4 w-4 text-muted-foreground" /> Curved Arrow
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="border-t my-1" />
+              {/* Highlight direct */}
+              <button onClick={() => { addComponent('highlight'); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <ArrowRight className="h-4 w-4 text-muted-foreground" /> Simple Arrow
-              </button>
-              <button onClick={() => { addComponent('gradientArrow'); setArrowsOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <ArrowDown className="h-4 w-4 text-muted-foreground" /> Gradient Arrow
-              </button>
-              <button onClick={() => { addComponent('curvedArrow'); setArrowsOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <CornerDownRight className="h-4 w-4 text-muted-foreground" /> Curved Arrow
+                <Highlighter className="h-4 w-4 text-muted-foreground" /> Highlight
               </button>
             </div>
           )}
         </div>
-
-        <Button variant="ghost" size="sm" onClick={() => addComponent('highlight')} className="gap-1.5">
-          <Highlighter className="h-4 w-4" /> Highlight
-        </Button>
 
         {/* Documentation dropdown */}
         <div className="relative" ref={docsRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setDocsOpen(!docsOpen); setArrowsOpen(false); setBoxesOpen(false); setAndroidOpen(false); setCharsOpen(false); }} className="gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setDocsOpen(!docsOpen); }} className="gap-1.5">
             <BookOpen className="h-4 w-4" /> Doc <ChevronIcon open={docsOpen} />
           </Button>
           {docsOpen && (
             <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
-              <button onClick={() => { addComponent('documentation', { variant: 'white' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('documentation', { variant: 'white' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 border rounded bg-white" /> White Page
               </button>
-              <button onClick={() => { addComponent('documentation', { variant: 'black' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('documentation', { variant: 'black' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 border rounded bg-gray-900" /> Dark Page
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Note</div>
-              <button onClick={() => { addComponent('noteBox', { variant: 'light' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('noteBox', { variant: 'light' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 rounded border-l-[3px] border-l-green-600 bg-green-50" /> Light Note
               </button>
-              <button onClick={() => { addComponent('noteBox', { variant: 'dark' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('noteBox', { variant: 'dark' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 rounded border-l-[3px] border-l-green-400 bg-green-950" /> Dark Note
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Code</div>
-              <button onClick={() => { addComponent('docCodeBlock', { variant: 'light' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('docCodeBlock', { variant: 'light' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 rounded border bg-green-50 flex items-center justify-center text-[6px] font-mono text-green-800">{'{}'}</div> Light Code
               </button>
-              <button onClick={() => { addComponent('docCodeBlock', { variant: 'dark' }); setDocsOpen(false); }}
+              <button onClick={() => { addComponent('docCodeBlock', { variant: 'dark' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 rounded border bg-slate-900 flex items-center justify-center text-[6px] font-mono text-blue-400">{'{}'}</div> Dark Code
               </button>
@@ -215,67 +236,58 @@ const TopToolbar: React.FC = () => {
           )}
         </div>
 
-        {/* Characters dropdown */}
+        {/* Characters dropdown (now includes Android/Device) */}
         <div className="relative" ref={charsRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setCharsOpen(!charsOpen); setArrowsOpen(false); setBoxesOpen(false); setAndroidOpen(false); }} className="gap-1.5">
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setCharsOpen(!charsOpen); }} className="gap-1.5">
             <User className="h-4 w-4" /> Character <ChevronIcon open={charsOpen} />
           </Button>
           {charsOpen && (
             <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
-              <button onClick={() => { addComponent('character'); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('character'); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <User className="h-4 w-4 text-muted-foreground" /> Doodle Character
               </button>
-              <button onClick={() => { addComponent('indianCharacter'); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('indianCharacter'); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <Smile className="h-4 w-4 text-muted-foreground" /> Indian Face
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Open Peeps</div>
-              <button onClick={() => { addComponent('openPeep', { variant: 'explaining' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'explaining' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Explaining
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'coffee' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'coffee' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Coffee
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'pointing' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'pointing' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Pointing
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'gaming' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'gaming' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Gaming
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'hoodie' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'hoodie' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Hoodie
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'blazer' }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'blazer' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Blazer
               </button>
-              <button onClick={() => { addComponent('openPeep', { variant: 'buttonShirt', scale: 1 }); setCharsOpen(false); }}
+              <button onClick={() => { addComponent('openPeep', { variant: 'buttonShirt', scale: 1 }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
               </button>
-            </div>
-          )}
-        </div>
-
-        {/* Android dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <Button variant="ghost" size="sm" onClick={() => { setAndroidOpen(!androidOpen); setArrowsOpen(false); setBoxesOpen(false); }} className="gap-1.5">
-            <Smartphone className="h-4 w-4" /> Android <ChevronIcon open={androidOpen} />
-          </Button>
-          {androidOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
-              <button onClick={() => { addComponent('device', { variant: 'phone' }); setAndroidOpen(false); }}
+              <div className="border-t my-1" />
+              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>
+              <button onClick={() => { addComponent('device', { variant: 'phone' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <Smartphone className="h-4 w-4 text-muted-foreground" /> Phone
               </button>
-              <button onClick={() => { addComponent('device', { variant: 'tablet' }); setAndroidOpen(false); }}
+              <button onClick={() => { addComponent('device', { variant: 'tablet' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <Smartphone className="h-4 w-4 text-muted-foreground" /> Tablet
               </button>
@@ -283,6 +295,7 @@ const TopToolbar: React.FC = () => {
           )}
         </div>
       </div>
+
       <div className="flex items-center gap-2">
         {selectedId && (
           <Button variant="ghost" size="sm" onClick={() => removeComponent(selectedId)} className="gap-1.5 text-destructive">
@@ -290,26 +303,26 @@ const TopToolbar: React.FC = () => {
           </Button>
         )}
         <div className="h-6 w-px bg-border" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('whiteboard-export-pdf'));
-          }}
-          className="gap-1.5"
-        >
-          <FileImage className="h-4 w-4" /> PDF
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('whiteboard-export-mp4'));
-          }}
-          className="gap-1.5"
-        >
-          <FileVideo className="h-4 w-4" /> Record
-        </Button>
+
+        {/* Export dropdown */}
+        <div className="relative" ref={exportRef}>
+          <Button variant="ghost" size="sm" onClick={() => { closeAll(); setExportOpen(!exportOpen); }} className="gap-1.5">
+            <Download className="h-4 w-4" /> Export <ChevronIcon open={exportOpen} />
+          </Button>
+          {exportOpen && (
+            <div className="absolute top-full right-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
+              <button onClick={() => { window.dispatchEvent(new CustomEvent('whiteboard-export-pdf')); setExportOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <FileImage className="h-4 w-4 text-muted-foreground" /> PDF
+              </button>
+              <button onClick={() => { window.dispatchEvent(new CustomEvent('whiteboard-export-mp4')); setExportOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <FileVideo className="h-4 w-4 text-muted-foreground" /> Record
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="h-6 w-px bg-border" />
         <Button
           size="sm"
