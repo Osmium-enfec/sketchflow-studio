@@ -565,6 +565,7 @@ const Canvas: React.FC = () => {
             })}
           </svg>
         </div>
+        </div>
       </div>
     </div>
   );
