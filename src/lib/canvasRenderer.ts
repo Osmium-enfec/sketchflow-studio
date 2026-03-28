@@ -15,6 +15,17 @@ interface LottiePlayState {
 }
 
 /**
+ * Styles to inline when serializing SVG for offscreen rendering.
+ * This prevents losing CSS-applied styles during serialization.
+ */
+const INLINE_STYLE_PROPS = [
+  'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset',
+  'opacity', 'fill-opacity', 'stroke-opacity', 'font-family', 'font-size',
+  'font-weight', 'font-style', 'text-anchor', 'dominant-baseline',
+  'transform', 'visibility', 'display',
+];
+
+/**
  * Deterministic offscreen canvas renderer for video export.
  * Draws each frame programmatically: SVG serialization for static content
  * + lottie-web canvas renderer for character animations.
@@ -134,25 +145,59 @@ export class CanvasRenderer {
   }
 
   /**
-   * Render a single frame: SVG static content + Lottie character overlays.
+   * Render a single frame: background + SVG static content + Lottie character overlays.
    */
   async renderFrame(svgEl: SVGSVGElement): Promise<void> {
-    this.ctx.clearRect(0, 0, this.width, this.height);
+    // Draw white background first (prevents black screen)
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillRect(0, 0, this.width, this.height);
+
     await this.drawSvgContent(svgEl);
     this.updateLottieFrames();
     this.drawLottieCharacters(svgEl);
   }
 
+  /**
+   * Inline computed styles into SVG elements before serialization.
+   * This ensures fills, strokes, fonts, etc. survive serialization.
+   */
+  private inlineStyles(clone: SVGSVGElement, original: SVGSVGElement) {
+    const origElements = original.querySelectorAll('*');
+    const cloneElements = clone.querySelectorAll('*');
+
+    for (let i = 0; i < origElements.length && i < cloneElements.length; i++) {
+      const origEl = origElements[i] as Element;
+      const cloneEl = cloneElements[i] as SVGElement;
+
+      try {
+        const computed = window.getComputedStyle(origEl);
+        for (const prop of INLINE_STYLE_PROPS) {
+          const val = computed.getPropertyValue(prop);
+          if (val && val !== 'none' && val !== 'normal' && val !== '' && val !== 'auto') {
+            cloneEl.style.setProperty(prop, val);
+          }
+        }
+      } catch {
+        // Skip elements that can't be styled
+      }
+    }
+  }
+
   private drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
     return new Promise((resolve) => {
       const clone = svgEl.cloneNode(true) as SVGSVGElement;
+      // Remove foreignObject elements (Lottie containers) - we draw those separately
       clone.querySelectorAll('foreignObject').forEach(fo => fo.remove());
+
       clone.setAttribute('width', String(this.width));
       clone.setAttribute('height', String(this.height));
       if (!clone.getAttribute('viewBox')) {
         clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
       }
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      // Inline computed styles to prevent style loss during serialization
+      this.inlineStyles(clone, svgEl);
 
       const svgData = new XMLSerializer().serializeToString(clone);
       const url = URL.createObjectURL(
