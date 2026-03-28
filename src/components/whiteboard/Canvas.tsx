@@ -469,6 +469,34 @@ const Canvas: React.FC = () => {
                   />
                 );
               }
+              if (comp.type === 'docCodeBlock') {
+                return (
+                  <DocCodeBlockComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onDoubleClick={(e, field) => {
+                      e.stopPropagation();
+                      setEditingId(comp.id);
+                      setEditField(field);
+                      setEditText(comp.props[field] || '');
+                      const svg = svgRef.current!;
+                      const rect = svg.getBoundingClientRect();
+                      const scaleX = rect.width / CANVAS_W;
+                      const scaleY = rect.height / CANVAS_H;
+                      const cScale = (comp.props.width || 520) / 520;
+                      const yOffset = field === 'codeTitle' ? 10 * cScale : 36 * cScale + 10;
+                      setEditPos({
+                        x: comp.props.x * scaleX + rect.left + 24 * cScale * scaleX,
+                        y: (comp.props.y + yOffset) * scaleY + rect.top,
+                        width: (comp.props.width || 520) * scaleX - 60,
+                      });
+                    }}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                  />
+                );
+              }
               return null;
             })}
           </svg>

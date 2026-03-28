@@ -16,6 +16,7 @@ const DURATION: Record<string, number> = {
   openPeep: 3.0,
   documentation: 2.0,
   noteBox: 1.5,
+  docCodeBlock: 1.8,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -410,6 +411,7 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   openPeep: animateOpenPeep,
   documentation: animateDocumentation,
   noteBox: animateNoteBox,
+  docCodeBlock: animateDocCodeBlock,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
