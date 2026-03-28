@@ -85,9 +85,46 @@ const TopToolbar: React.FC = () => {
         <div className="h-6 w-px bg-border" />
         <span className="font-semibold text-lg tracking-tight mr-4">✏️ WhiteBoard</span>
         <div className="h-6 w-px bg-border" />
-        <Button variant="ghost" size="sm" onClick={() => addComponent('title')} className="gap-1.5">
-          <Type className="h-4 w-4" /> Title
-        </Button>
+        {/* Text dropdown */}
+        <div className="relative" ref={textRef}>
+          <Button variant="ghost" size="sm" onClick={() => { setTextOpen(!textOpen); setBoxesOpen(false); setArrowsOpen(false); setAndroidOpen(false); setCharsOpen(false); setDocsOpen(false); setMdSubOpen(false); }} className="gap-1.5">
+            <Type className="h-4 w-4" /> Text <ChevronIcon open={textOpen} />
+          </Button>
+          {textOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+              <button onClick={() => { addComponent('title'); setTextOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <Type className="h-4 w-4 text-muted-foreground" /> Title
+              </button>
+              <button onClick={() => { addComponent('content'); setTextOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <FileCode2 className="h-4 w-4 text-muted-foreground" /> Content
+              </button>
+              <div className="border-t my-1" />
+              <div className="relative"
+                onMouseEnter={() => setMdSubOpen(true)}
+                onMouseLeave={() => setMdSubOpen(false)}
+              >
+                <button className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                  <span className="flex items-center gap-3"><FileCode2 className="h-4 w-4 text-muted-foreground" /> Markdown</span>
+                  <svg className="h-3 w-3 -rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 5l3 3 3-3" /></svg>
+                </button>
+                {mdSubOpen && (
+                  <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+                    <button onClick={() => { addComponent('markdown', { variant: 'light' }); setTextOpen(false); setMdSubOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      ☀️ Light
+                    </button>
+                    <button onClick={() => { addComponent('markdown', { variant: 'dark' }); setTextOpen(false); setMdSubOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                      🌙 Dark
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Boxes dropdown */}
         <div className="relative" ref={boxesRef}>
