@@ -339,7 +339,6 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
                   fontSize={codeFontSize}
                   xmlSpace="preserve"
                 >
-                >
                   {segments.map((seg, segIdx) => (
                     <tspan
                       key={segIdx}
