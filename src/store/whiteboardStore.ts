@@ -2,6 +2,8 @@ import { create } from 'zustand';
 
 export type ComponentType = 'title' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock';
 
+export type CanvasType = 'whiteboard' | 'doc-white' | 'doc-dark';
+
 export interface WhiteboardComponent {
   id: string;
   type: ComponentType;
@@ -11,11 +13,13 @@ export interface WhiteboardComponent {
 }
 
 interface WhiteboardStore {
+  canvasType: CanvasType;
   components: WhiteboardComponent[];
   selectedId: string | null;
   editingId: string | null;
   isPlaying: boolean;
 
+  setCanvasType: (type: CanvasType) => void;
   addComponent: (type: ComponentType, extraProps?: Record<string, any>) => void;
   updateComponent: (id: string, updates: Partial<WhiteboardComponent>) => void;
   updateComponentProps: (id: string, props: Record<string, any>) => void;
@@ -47,10 +51,13 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
 };
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
+  canvasType: 'whiteboard' as CanvasType,
   components: [],
   selectedId: null,
   editingId: null,
   isPlaying: false,
+
+  setCanvasType: (type) => set({ canvasType: type }),
 
   addComponent: (type, extraProps) => {
     const id = String(nextId++);
