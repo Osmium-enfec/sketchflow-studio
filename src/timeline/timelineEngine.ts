@@ -468,33 +468,25 @@ function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
   const flipped = el.getAttribute('data-walk-flipped') === '1';
   const direction = flipped ? -1 : 1;
 
+  // Fade in (but ensure it stays visible after)
   if (foreignObj) {
-    gsap.set(foreignObj, { opacity: 0 });
-    tl.to(foreignObj, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 0);
+    gsap.set(foreignObj, { opacity: 1 });
   }
 
   // Start lottie playback
   tl.call(() => {
     const controlEl = el.querySelector('[data-lottie-control]') as any;
     if (controlEl?.__lottiePlay) controlEl.__lottiePlay();
-  }, [], 0.2);
+  }, [], 0);
 
   // Walk the character across the distance
   if (foreignObj && walkDistance > 0) {
+    const startX = Number(foreignObj.getAttribute('x') || 0);
     tl.to(foreignObj, {
-      attr: { x: `+=${walkDistance * direction}` },
+      attr: { x: startX + walkDistance * direction },
       duration: 2.5,
       ease: 'none',
-    }, 0.3);
-    // Move selection rect too
-    const rect = el.querySelector('rect');
-    if (rect) {
-      tl.to(rect, {
-        attr: { x: `+=${walkDistance * direction}` },
-        duration: 2.5,
-        ease: 'none',
-      }, 0.3);
-    }
+    }, 0.1);
   }
 
   return tl;
