@@ -283,25 +283,25 @@ const TopToolbar: React.FC = () => {
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie</div>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'walking' }); closeAll(); }}
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'bouncing' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Walking
+                <Film className="h-4 w-4 text-muted-foreground" /> Bouncing Ball
               </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'waving' }); closeAll(); }}
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'pulse' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Waving
+                <Film className="h-4 w-4 text-muted-foreground" /> Pulse
               </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'thinking' }); closeAll(); }}
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'spinner' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Thinking
+                <Film className="h-4 w-4 text-muted-foreground" /> Spinner
               </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'celebrating' }); closeAll(); }}
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'checkmark' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Celebrating
+                <Film className="h-4 w-4 text-muted-foreground" /> Checkmark
               </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'coding' }); closeAll(); }}
+              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'waveform' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Coding
+                <Film className="h-4 w-4 text-muted-foreground" /> Waveform
               </button>
               <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Devices</div>
