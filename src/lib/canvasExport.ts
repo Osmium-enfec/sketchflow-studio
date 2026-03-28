@@ -127,7 +127,9 @@ export const exportMP4 = async (
   console.log('[exportMP4] All frames written, encoding...');
 
   // 6. Encode frames into H.264 MP4
-  await ffmpeg.exec([
+  console.log('[exportMP4] Starting FFmpeg encode...');
+  ffmpeg.on('log', ({ message }) => console.log('[ffmpeg]', message));
+  const exitCode = await ffmpeg.exec([
     '-framerate', String(FPS),
     '-i', 'f%05d.jpg',
     '-c:v', 'libx264',
@@ -136,6 +138,7 @@ export const exportMP4 = async (
     '-crf', '23',
     'output.mp4',
   ]);
+  console.log('[exportMP4] FFmpeg exit code:', exitCode);
 
   // 7. Download the MP4
   const output = await ffmpeg.readFile('output.mp4');
