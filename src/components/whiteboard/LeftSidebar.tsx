@@ -1,5 +1,5 @@
 import React from 'react';
-import { Type, Square, ArrowRight, Highlighter, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, StickyNote } from 'lucide-react';
+import { Type, Square, ArrowRight, Highlighter, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, StickyNote, Code2 } from 'lucide-react';
 import { useWhiteboardStore, ComponentType } from '@/store/whiteboardStore';
 
 const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
@@ -17,6 +17,7 @@ const iconMap: Record<ComponentType, React.FC<{ className?: string }>> = {
   openPeep: PersonStanding,
   documentation: BookOpen,
   noteBox: StickyNote,
+  docCodeBlock: Code2,
 };
 
 const labelMap: Record<ComponentType, string> = {
@@ -34,6 +35,7 @@ const labelMap: Record<ComponentType, string> = {
   openPeep: 'Open Peep',
   documentation: 'Documentation',
   noteBox: 'Note Box',
+  docCodeBlock: 'Code Block',
 };
 
 const LeftSidebar: React.FC = () => {
