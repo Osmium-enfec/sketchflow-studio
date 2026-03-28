@@ -260,15 +260,28 @@ const Canvas: React.FC = () => {
           className="fixed z-50"
           style={{ left: editPos.x, top: editPos.y }}
         >
-          <input
-            autoFocus
-            value={editText}
-            onChange={(e) => setEditText(e.target.value)}
-            onBlur={commitEdit}
-            onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
-            className="px-2 py-1 border-2 border-primary rounded bg-background text-foreground font-['Patrick_Hand'] text-lg outline-none"
-            style={{ width: Math.max(200, editPos.width) }}
-          />
+          {editField === 'codeContent' ? (
+            <textarea
+              autoFocus
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={(e) => { if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
+              className="px-2 py-1 border-2 border-primary rounded bg-background text-foreground font-mono text-sm outline-none resize"
+              style={{ width: Math.max(300, editPos.width), minHeight: 120 }}
+              rows={8}
+            />
+          ) : (
+            <input
+              autoFocus
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditingId(null); setEditPos(null); } }}
+              className="px-2 py-1 border-2 border-primary rounded bg-background text-foreground font-['Patrick_Hand'] text-lg outline-none"
+              style={{ width: Math.max(200, editPos.width) }}
+            />
+          )}
         </div>
       )}
 
