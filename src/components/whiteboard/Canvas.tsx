@@ -12,6 +12,7 @@ import CurvedArrowComponent from './canvas/CurvedArrowComponent';
 import FoldedBoxComponent from './canvas/FoldedBoxComponent';
 import CodeBoxComponent from './canvas/CodeBoxComponent';
 import OpenPeepComponent from './canvas/OpenPeepComponent';
+import DocumentationComponent from './canvas/DocumentationComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -77,7 +78,7 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation')) return;
       setEditingId(id);
       setEditText(comp.props.text || '');
       
@@ -153,7 +154,7 @@ const Canvas: React.FC = () => {
         const comp = components.find((c) => c.id === id);
         if (!comp) return;
 
-        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox') {
+        if (comp.type === 'box' || comp.type === 'foldedBox' || comp.type === 'codeBox' || comp.type === 'documentation') {
           let newProps: any = {};
           if (handle === 'se') {
             newProps = { width: Math.max(60, startProps.width + dx), height: Math.max(40, startProps.height + dy) };
@@ -422,6 +423,17 @@ const Canvas: React.FC = () => {
                     component={comp}
                     isSelected={selectedId === comp.id}
                     onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                  />
+                );
+              }
+              if (comp.type === 'documentation') {
+                return (
+                  <DocumentationComponent
+                    key={comp.id}
+                    component={comp}
+                    isSelected={selectedId === comp.id}
+                    onMouseDown={(e) => handleMouseDown(e, comp.id, comp.props)}
+                    onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
                   />
                 );
               }

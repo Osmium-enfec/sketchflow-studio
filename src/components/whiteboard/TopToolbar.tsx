@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding } from 'lucide-react';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen } from 'lucide-react';
 import { useWhiteboardStore } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
@@ -9,10 +9,12 @@ const TopToolbar: React.FC = () => {
   const [arrowsOpen, setArrowsOpen] = useState(false);
   const [boxesOpen, setBoxesOpen] = useState(false);
   const [charsOpen, setCharsOpen] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<HTMLDivElement>(null);
+  const docsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -20,6 +22,7 @@ const TopToolbar: React.FC = () => {
       if (arrowsRef.current && !arrowsRef.current.contains(e.target as Node)) setArrowsOpen(false);
       if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
       if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
+      if (docsRef.current && !docsRef.current.contains(e.target as Node)) setDocsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -89,6 +92,25 @@ const TopToolbar: React.FC = () => {
         <Button variant="ghost" size="sm" onClick={() => addComponent('highlight')} className="gap-1.5">
           <Highlighter className="h-4 w-4" /> Highlight
         </Button>
+
+        {/* Documentation dropdown */}
+        <div className="relative" ref={docsRef}>
+          <Button variant="ghost" size="sm" onClick={() => { setDocsOpen(!docsOpen); setArrowsOpen(false); setBoxesOpen(false); setAndroidOpen(false); setCharsOpen(false); }} className="gap-1.5">
+            <BookOpen className="h-4 w-4" /> Doc <ChevronIcon open={docsOpen} />
+          </Button>
+          {docsOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[160px] py-1">
+              <button onClick={() => { addComponent('documentation', { variant: 'white' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 border rounded bg-white" /> White Page
+              </button>
+              <button onClick={() => { addComponent('documentation', { variant: 'black' }); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 border rounded bg-gray-900" /> Dark Page
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Characters dropdown */}
         <div className="relative" ref={charsRef}>
