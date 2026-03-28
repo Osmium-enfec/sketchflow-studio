@@ -23,6 +23,7 @@ import { playAnimation } from '@/timeline/timelineEngine';
 import { exportPDF, exportMP4 } from '@/lib/canvasExport';
 import { toast } from 'sonner';
 import { CHARACTER_ANIMATIONS } from '@/lib/characterAnimations';
+import { LOTTIE_VARIANTS } from '@/lib/characterLottieVariants';
 
 const NOTE_COLOR_KEYS = Object.keys(NOTE_COLOR_THEMES);
 const NOTE_SWATCH_COLORS: Record<string, string> = {
@@ -385,6 +386,18 @@ const Canvas: React.FC = () => {
       {/* Walking character controls */}
       {selectedComp && selectedComp.type === 'walkingCharacter' && (
         <div className="absolute top-3 left-3 z-10 bg-card border rounded-lg shadow-sm p-3 flex flex-col gap-2 min-w-[220px]">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Variant:</span>
+            <select
+              value={selectedComp.props.variant || 'femaleWalking'}
+              onChange={(e) => updateComponentProps(selectedComp.id, { variant: e.target.value })}
+              className="text-xs border rounded px-2 py-1 bg-background text-foreground"
+            >
+              {LOTTIE_VARIANTS.map(v => (
+                <option key={v.key} value={v.key}>{v.label}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium">Direction:</span>
             <button
