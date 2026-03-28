@@ -273,15 +273,11 @@ const Canvas: React.FC = () => {
     const handleMP4 = () => {
       if (svgRef.current) {
         toast.promise(
-          exportMP4(svgRef.current, CANVAS_W, CANVAS_H, () => {
-            if (svgRef.current) {
-              playAnimation(svgRef.current, useWhiteboardStore.getState().components);
-            }
-          }, 'whiteboard-animation', useWhiteboardStore.getState().components),
+          exportMP4(svgRef.current, CANVAS_W, CANVAS_H, useWhiteboardStore.getState().components),
           {
-            loading: 'Recording animation... (will download when complete)',
-            success: 'Recording downloaded!',
-            error: 'Failed to record animation',
+            loading: 'Exporting MP4… (loading encoder, rendering frames)',
+            success: 'MP4 exported successfully!',
+            error: 'Failed to export MP4',
           }
         );
       }

@@ -526,7 +526,11 @@ const animators: Record<string, AnimatorFn> = {
   walkingCharacter: animateWalkingCharacter,
 };
 
-export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
+/**
+ * Build a paused GSAP timeline for the given components.
+ * Used by both playAnimation (real-time) and exportMP4 (deterministic frame-by-frame).
+ */
+export function buildTimeline(svgEl: SVGSVGElement, components: WhiteboardComponent[]): gsap.core.Timeline {
   gsap.killTweensOf(svgEl.querySelectorAll('*'));
 
   // Stop all Lottie animations and reset them
@@ -536,8 +540,7 @@ export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardCompon
   });
 
   const sorted = [...components].sort((a, b) => a.order - b.order);
-
-  const master = gsap.timeline();
+  const master = gsap.timeline({ paused: true });
   let currentTime = 0;
 
   sorted.forEach((comp) => {
@@ -554,8 +557,13 @@ export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardCompon
     currentTime = startTime + (DURATION[comp.type] || 1);
   });
 
+  return master;
+}
+
+export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
+  const master = buildTimeline(svgEl, components);
+
   master.eventCallback('onComplete', () => {
-    // Stop Lottie animations when playback ends
     svgEl.querySelectorAll('[data-lottie-control]').forEach((controlEl: any) => {
       if (controlEl.__lottieStop) controlEl.__lottieStop();
     });
