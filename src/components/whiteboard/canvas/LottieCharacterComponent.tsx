@@ -1,10 +1,7 @@
 import React, { useMemo } from 'react';
-import * as LottieModule from 'lottie-react';
+import { LottiePlayer as Lottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
-
-// lottie-react exports default as a property on the module object
-const Lottie = (LottieModule as any).default || LottieModule;
 
 export const LOTTIE_PRESET_LIST = [
   { value: 'bouncing', label: 'Bouncing' },
