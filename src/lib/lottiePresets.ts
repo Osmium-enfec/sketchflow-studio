@@ -256,7 +256,7 @@ export const LOTTIE_PRESETS: Record<string, LottiePresetInfo> = {
     label: 'Walking',
     category: 'character',
     source: 'url',
-    url: 'https://assets2.lottiefiles.com/packages/lf20_M9p23l.json',
+    url: 'https://lottie.host/a748cfc6-d769-459e-a197-bff765fa262a/xgroR1pXjk.lottie',
   },
   sayHello: {
     label: 'Say Hello',

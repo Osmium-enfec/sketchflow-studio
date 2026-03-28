@@ -1,5 +1,6 @@
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useLottie } from 'lottie-react';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData, getLottieUrl, LOTTIE_PRESETS } from '@/lib/lottiePresets';
 
@@ -14,7 +15,8 @@ interface Props {
   onResizeStart?: (e: React.MouseEvent, handle: string) => void;
 }
 
-const LottieInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
+/** Renders JSON-based Lottie animations */
+const LottieJsonInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
   const { View, goToAndStop, play, stop, setSpeed } = useLottie({
     animationData,
     loop: true,
@@ -42,6 +44,38 @@ const LottieInner: React.FC<{ animationData: any; width: number; height: number 
   );
 };
 
+/** Renders .lottie (dotLottie) format animations */
+const DotLottieInner: React.FC<{ src: string; width: number; height: number }> = ({ src, width, height }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dotLottieRef = useRef<any>(null);
+
+  const dotLottieRefCallback = useCallback((dotLottie: any) => {
+    if (!dotLottie) return;
+    dotLottieRef.current = dotLottie;
+    dotLottie.pause();
+    
+    const el = containerRef.current;
+    if (el) {
+      (el as any).__lottiePlay = () => dotLottie.play();
+      (el as any).__lottieStop = () => dotLottie.pause();
+      (el as any).__lottieGoTo = (frame: number) => { dotLottie.setFrame(frame); };
+      (el as any).__lottieSetSpeed = (speed: number) => { dotLottie.setSpeed(speed); };
+    }
+  }, []);
+
+  return (
+    <div ref={containerRef} data-lottie-control="true" style={{ width, height, pointerEvents: 'all' }}>
+      <DotLottieReact
+        src={src}
+        loop
+        autoplay={false}
+        dotLottieRefCallback={dotLottieRefCallback}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
+  );
+};
+
 const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onResizeStart }) => {
   const { x, y, width = 300, height = 300, lottiePreset = 'bouncing', lottieUrl: customUrl } = component.props;
   const [remoteData, setRemoteData] = useState<object | null>(null);
@@ -51,10 +85,13 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
   // Inline data for inline presets
   const inlineData = useMemo(() => getLottieData(lottiePreset), [lottiePreset]);
 
-  // Fetch remote URL data
+  // Determine if the URL is a .lottie (dotLottie) format
+  const remoteUrl = useMemo(() => getLottieUrl(lottiePreset, customUrl), [lottiePreset, customUrl]);
+  const isDotLottie = remoteUrl?.endsWith('.lottie') ?? false;
+
+  // Fetch remote URL data (only for JSON URLs, not .lottie)
   useEffect(() => {
-    const url = getLottieUrl(lottiePreset, customUrl);
-    if (!url) {
+    if (!remoteUrl || isDotLottie) {
       setRemoteData(null);
       setLoading(false);
       setError(null);
@@ -65,7 +102,7 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
     setError(null);
     setRemoteData(null);
 
-    fetch(url)
+    fetch(remoteUrl)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -78,7 +115,7 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
         setError(err.message);
         setLoading(false);
       });
-  }, [lottiePreset, customUrl]);
+  }, [remoteUrl, isDotLottie]);
 
   const animationData = inlineData || remoteData;
 
@@ -88,6 +125,36 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
     ne: { cx: width, cy: 0 },
     sw: { cx: 0, cy: height },
     se: { cx: width, cy: height },
+  };
+
+  // Render the appropriate player
+  const renderPlayer = () => {
+    if (isDotLottie && remoteUrl) {
+      return <DotLottieInner src={remoteUrl} width={width} height={height} />;
+    }
+    if (loading) {
+      return (
+        <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ color: '#94a3b8', fontSize: 14, fontFamily: 'sans-serif' }}>Loading...</div>
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
+          <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'sans-serif' }}>Failed to load</div>
+          <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'sans-serif' }}>{error}</div>
+        </div>
+      );
+    }
+    if (animationData) {
+      return <LottieJsonInner animationData={animationData} width={width} height={height} />;
+    }
+    return (
+      <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#94a3b8', fontSize: 13, fontFamily: 'sans-serif' }}>No animation</div>
+      </div>
+    );
   };
 
   return (
@@ -100,22 +167,7 @@ const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
         onMouseDown={onMouseDown}
         style={{ cursor: 'grab', overflow: 'visible' }}
       >
-        {loading ? (
-          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: '#94a3b8', fontSize: 14, fontFamily: 'sans-serif' }}>Loading...</div>
-          </div>
-        ) : error ? (
-          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 4 }}>
-            <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'sans-serif' }}>Failed to load</div>
-            <div style={{ color: '#94a3b8', fontSize: 11, fontFamily: 'sans-serif' }}>{error}</div>
-          </div>
-        ) : animationData ? (
-          <LottieInner animationData={animationData} width={width} height={height} />
-        ) : (
-          <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: '#94a3b8', fontSize: 13, fontFamily: 'sans-serif' }}>No animation</div>
-          </div>
-        )}
+        {renderPlayer()}
       </foreignObject>
 
       {isSelected && (
