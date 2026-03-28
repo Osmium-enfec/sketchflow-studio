@@ -51,7 +51,7 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 /**
  * Wait for a specific duration using requestAnimationFrame for accuracy.
  */
-const waitFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 /**
  * Export animation as WebM video using deterministic frame-by-frame rendering + MediaRecorder.
