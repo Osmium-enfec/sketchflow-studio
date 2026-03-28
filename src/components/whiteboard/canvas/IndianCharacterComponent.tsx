@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import { applyCharacterAnimation, CharacterAnimation } from '@/lib/characterAnimations';
 
 interface Props {
   component: WhiteboardComponent;
@@ -10,7 +9,7 @@ interface Props {
 }
 
 const IndianCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown }) => {
-  const { x, y, scale = 1, animation = 'idle' } = component.props;
+  const { x, y, scale = 1 } = component.props;
   const eyeLidsRef = useRef<SVGGElement>(null);
   const browsRef = useRef<SVGGElement>(null);
   const headRef = useRef<SVGGElement>(null);
@@ -42,31 +41,18 @@ const IndianCharacterComponent: React.FC<Props> = ({ component, isSelected, onMo
     };
   }, []);
 
-  // Character animation (talking, smiling, waving, nodding, breathing)
+  // Idle float
   useEffect(() => {
-    const animTl = applyCharacterAnimation(animation as CharacterAnimation, {
-      mouthEl: mouthRef.current,
-      headEl: headRef.current,
-      bodyEl: headRef.current, // use head group as body proxy for breathing/waving
+    if (!headRef.current) return;
+    const floatTween = gsap.to(headRef.current, {
+      y: '+=1.5',
+      duration: 2.2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut',
     });
-
-    // Idle float when no special animation
-    let floatTween: gsap.core.Tween | null = null;
-    if (animation === 'idle' && headRef.current) {
-      floatTween = gsap.to(headRef.current, {
-        y: '+=1.5',
-        duration: 2.2,
-        yoyo: true,
-        repeat: -1,
-        ease: 'sine.inOut',
-      });
-    }
-
-    return () => {
-      animTl?.kill();
-      floatTween?.kill();
-    };
-  }, [animation]);
+    return () => { floatTween.kill(); };
+  }, []);
 
   return (
     <g

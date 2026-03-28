@@ -1,11 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
 import { getLottieData } from '@/lib/lottiePresets';
 
 export const LOTTIE_PRESET_LIST = [
-  { value: 'walking', label: 'Walking' },
-  { value: 'running', label: 'Running' },
   { value: 'bouncing', label: 'Bouncing Ball' },
   { value: 'pulse', label: 'Pulse' },
   { value: 'spinner', label: 'Spinner' },
@@ -21,13 +19,39 @@ interface Props {
 }
 
 const LottieInner: React.FC<{ animationData: any; width: number; height: number }> = ({ animationData, width, height }) => {
-  const { View } = useLottie({
+  const { View, goToAndStop, play, stop, setSpeed } = useLottie({
     animationData,
     loop: true,
-    autoplay: true,
+    autoplay: false, // Don't autoplay — controlled by timeline
     style: { width: '100%', height: '100%' },
   });
-  return <div style={{ width, height, pointerEvents: 'all' }}>{View}</div>;
+
+  // Expose play/stop via DOM data attributes so timeline engine can control it
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    // Store control functions on the DOM element for timeline access
+    (el as any).__lottiePlay = play;
+    (el as any).__lottieStop = stop;
+    (el as any).__lottieGoTo = goToAndStop;
+    (el as any).__lottieSetSpeed = setSpeed;
+
+    // Start paused at frame 0
+    goToAndStop(0, true);
+
+    return () => {
+      stop();
+    };
+  }, [play, stop, goToAndStop, setSpeed]);
+
+  return (
+    <div ref={containerRef} data-lottie-control="true" style={{ width, height, pointerEvents: 'all' }}>
+      {View}
+    </div>
+  );
 };
 
 const LottieCharacterComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onResizeStart }) => {
