@@ -17,8 +17,12 @@ import NoteBoxComponent from './canvas/NoteBoxComponent';
 import DocCodeBlockComponent from './canvas/DocCodeBlockComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
-const CANVAS_W = 1920;
-const CANVAS_H = 1080;
+// A4 at 150 DPI ≈ 1240 × 1754
+const CANVAS_PRESETS = {
+  'whiteboard': { w: 1920, h: 1080, bg: 'hsl(43 100% 98%)', grid: true, gridColor: 'hsl(0 0% 85%)' },
+  'doc-white': { w: 1240, h: 1754, bg: '#ffffff', grid: false, gridColor: 'transparent' },
+  'doc-dark': { w: 1240, h: 1754, bg: '#1a1a2e', grid: false, gridColor: 'transparent' },
+} as const;
 
 const HIGHLIGHT_COLORS = [
   'hsl(48 100% 67%)',   // yellow
@@ -39,7 +43,10 @@ const TITLE_COLORS = [
 ];
 
 const Canvas: React.FC = () => {
-  const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps } = useWhiteboardStore();
+  const { components, selectedId, editingId, selectComponent, setEditingId, updateComponentProps, canvasType } = useWhiteboardStore();
+  const preset = CANVAS_PRESETS[canvasType];
+  const CANVAS_W = preset.w;
+  const CANVAS_H = preset.h;
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null);
@@ -318,18 +325,22 @@ const Canvas: React.FC = () => {
             ref={svgRef}
             viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
             className="w-full h-full"
-            style={{ backgroundColor: 'hsl(43 100% 98%)' }}
+            style={{ backgroundColor: preset.bg }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onClick={(e) => { if (e.target === e.currentTarget) { selectComponent(null); if (editingId) commitEdit(); } }}
           >
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="hsl(0 0% 85%)" />
-              </pattern>
-            </defs>
-            <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+            {preset.grid && (
+              <>
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <circle cx="1" cy="1" r="1" fill={preset.gridColor} />
+                  </pattern>
+                </defs>
+                <rect width={CANVAS_W} height={CANVAS_H} fill="url(#grid)" opacity="0.5" />
+              </>
+            )}
 
             {components.map((comp) => {
               if (comp.type === 'title') {

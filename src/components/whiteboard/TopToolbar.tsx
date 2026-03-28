@@ -1,20 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen } from 'lucide-react';
-import { useWhiteboardStore } from '@/store/whiteboardStore';
+import { Play, Square, Type, ArrowRight, Highlighter, Trash2, User, Smile, Smartphone, ArrowDown, CornerDownRight, FileText, Monitor, PersonStanding, BookOpen, Layout } from 'lucide-react';
+import { useWhiteboardStore, CanvasType } from '@/store/whiteboardStore';
 import { Button } from '@/components/ui/button';
 
 const TopToolbar: React.FC = () => {
-  const { addComponent, isPlaying, setPlaying, selectedId, removeComponent } = useWhiteboardStore();
+  const { addComponent, isPlaying, setPlaying, selectedId, removeComponent, canvasType, setCanvasType } = useWhiteboardStore();
   const [androidOpen, setAndroidOpen] = useState(false);
   const [arrowsOpen, setArrowsOpen] = useState(false);
   const [boxesOpen, setBoxesOpen] = useState(false);
   const [charsOpen, setCharsOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const [docSubOpen, setDocSubOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const arrowsRef = useRef<HTMLDivElement>(null);
   const boxesRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<HTMLDivElement>(null);
   const docsRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -23,6 +26,7 @@ const TopToolbar: React.FC = () => {
       if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
       if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
       if (docsRef.current && !docsRef.current.contains(e.target as Node)) setDocsOpen(false);
+      if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) { setCanvasOpen(false); setDocSubOpen(false); }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -37,6 +41,44 @@ const TopToolbar: React.FC = () => {
   return (
     <div className="h-14 toolbar-bg border-b flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
+        {/* Canvas type selector */}
+        <div className="relative" ref={canvasRef}>
+          <Button variant="ghost" size="sm" onClick={() => { setCanvasOpen(!canvasOpen); setDocSubOpen(false); }} className="gap-1.5">
+            <Layout className="h-4 w-4" />
+            {canvasType === 'whiteboard' ? 'Whiteboard' : canvasType === 'doc-white' ? 'Doc (Light)' : 'Doc (Dark)'}
+            <ChevronIcon open={canvasOpen} />
+          </Button>
+          {canvasOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-card border rounded-lg shadow-lg z-50 min-w-[180px] py-1">
+              <button onClick={() => { setCanvasType('whiteboard'); setCanvasOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'whiteboard' ? 'bg-muted font-medium' : ''}`}>
+                ✏️ Whiteboard
+              </button>
+              <div className="relative"
+                onMouseEnter={() => setDocSubOpen(true)}
+                onMouseLeave={() => setDocSubOpen(false)}
+              >
+                <button className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType.startsWith('doc') ? 'bg-muted font-medium' : ''}`}>
+                  <span className="flex items-center gap-3">📄 Documentation (A4)</span>
+                  <svg className="h-3 w-3 -rotate-90" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 5l3 3 3-3" /></svg>
+                </button>
+                {docSubOpen && (
+                  <div className="absolute left-full top-0 ml-1 bg-card border rounded-lg shadow-lg z-50 min-w-[140px] py-1">
+                    <button onClick={() => { setCanvasType('doc-white'); setCanvasOpen(false); setDocSubOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'doc-white' ? 'font-medium' : ''}`}>
+                      ☀️ White
+                    </button>
+                    <button onClick={() => { setCanvasType('doc-dark'); setCanvasOpen(false); setDocSubOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors ${canvasType === 'doc-dark' ? 'font-medium' : ''}`}>
+                      🌙 Dark
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="h-6 w-px bg-border" />
         <span className="font-semibold text-lg tracking-tight mr-4">✏️ WhiteBoard</span>
         <div className="h-6 w-px bg-border" />
         <Button variant="ghost" size="sm" onClick={() => addComponent('title')} className="gap-1.5">
