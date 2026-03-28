@@ -13,6 +13,7 @@ import FoldedBoxComponent from './canvas/FoldedBoxComponent';
 import CodeBoxComponent from './canvas/CodeBoxComponent';
 import OpenPeepComponent from './canvas/OpenPeepComponent';
 import DocumentationComponent from './canvas/DocumentationComponent';
+import NoteBoxComponent from './canvas/NoteBoxComponent';
 import { playAnimation } from '@/timeline/timelineEngine';
 
 const CANVAS_W = 1920;
@@ -45,6 +46,7 @@ const Canvas: React.FC = () => {
   const endpointDragging = useRef<{ id: string; endpoint: 'start' | 'end' } | null>(null);
   const [zoom, setZoom] = useState(1);
   const [editText, setEditText] = useState('');
+  const [editField, setEditField] = useState<string>('text'); // which prop field is being edited
   const [editPos, setEditPos] = useState<{ x: number; y: number; width: number } | null>(null);
 
   const zoomIn = () => setZoom((z) => Math.min(z + 0.15, 3));
@@ -78,8 +80,9 @@ const Canvas: React.FC = () => {
     (e: React.MouseEvent, id: string) => {
       e.stopPropagation();
       const comp = components.find((c) => c.id === id);
-      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation')) return;
+      if (!comp || (comp.type !== 'title' && comp.type !== 'box' && comp.type !== 'foldedBox' && comp.type !== 'codeBox' && comp.type !== 'documentation' && comp.type !== 'noteBox')) return;
       setEditingId(id);
+      setEditField('text');
       setEditText(comp.props.text || '');
       
       const svg = svgRef.current!;
@@ -106,11 +109,12 @@ const Canvas: React.FC = () => {
 
   const commitEdit = useCallback(() => {
     if (editingId && editText.trim()) {
-      updateComponentProps(editingId, { text: editText });
+      updateComponentProps(editingId, { [editField]: editText });
     }
     setEditingId(null);
     setEditPos(null);
-  }, [editingId, editText, updateComponentProps, setEditingId]);
+    setEditField('text');
+  }, [editingId, editText, editField, updateComponentProps, setEditingId]);
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent, id: string, handle: string) => {

@@ -108,6 +108,11 @@ const TopToolbar: React.FC = () => {
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                 <div className="w-4 h-4 border rounded bg-gray-900" /> Dark Page
               </button>
+              <div className="border-t my-1" />
+              <button onClick={() => { addComponent('noteBox'); setDocsOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                <div className="w-4 h-4 rounded border-l-[3px] border-l-green-600 bg-green-50" /> Note Callout
+              </button>
             </div>
           )}
         </div>
