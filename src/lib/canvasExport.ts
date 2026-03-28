@@ -51,7 +51,7 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 /**
  * Wait for a specific duration using requestAnimationFrame for accuracy.
  */
-const waitFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
 /**
  * Export animation as WebM video using deterministic frame-by-frame rendering + MediaRecorder.
@@ -133,7 +133,7 @@ export const exportMP4 = async (
     }
 
     // Small delay to let MediaRecorder process the frame
-    await waitFrame();
+    await delay(1000 / FPS);
 
     if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames}`);
   }
