@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-javascript';
@@ -25,6 +25,10 @@ interface Props {
   onMouseDown: (e: React.MouseEvent) => void;
   onDoubleClick: (e: React.MouseEvent, field: 'codeTitle' | 'codeContent') => void;
   onResizeStart: (e: React.MouseEvent, handle: string) => void;
+  editingField?: 'codeTitle' | 'codeContent' | null;
+  editText?: string;
+  onEditChange?: (text: string) => void;
+  onEditCommit?: () => void;
 }
 
 const BASE_WIDTH = 520;
@@ -124,7 +128,10 @@ const flattenTokens = (tokens: (string | Prism.Token)[], isDark: boolean): Token
   return segments;
 };
 
-const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick, onResizeStart }) => {
+const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouseDown, onDoubleClick, onResizeStart, editingField, editText, onEditChange, onEditCommit }) => {
+  const titleRef = useRef<HTMLInputElement>(null);
+  const codeRef = useRef<HTMLTextAreaElement>(null);
+
   const {
     x, y,
     width = BASE_WIDTH,
@@ -158,6 +165,55 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
   const lang = detectLanguage(codeTitle);
   const codeLines = codeContent.split('\n');
 
+  useEffect(() => {
+    if (editingField === 'codeTitle' && titleRef.current) {
+      titleRef.current.focus();
+      titleRef.current.select();
+    }
+    if (editingField === 'codeContent' && codeRef.current) {
+      codeRef.current.focus();
+    }
+  }, [editingField]);
+
+  const handleCodeKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      onEditCommit?.();
+      return;
+    }
+    // Tab inserts 4 spaces
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const ta = e.currentTarget;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const val = ta.value;
+      const newVal = val.substring(0, start) + '    ' + val.substring(end);
+      onEditChange?.(newVal);
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = start + 4;
+      });
+      return;
+    }
+    // Enter: auto-indent
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const ta = e.currentTarget;
+      const start = ta.selectionStart;
+      const val = ta.value;
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+      const currentLine = val.substring(lineStart, start);
+      const indent = currentLine.match(/^(\s*)/)?.[1] || '';
+      // Add extra indent after colon
+      const extra = currentLine.trimEnd().endsWith(':') ? '    ' : '';
+      const newVal = val.substring(0, start) + '\n' + indent + extra + val.substring(ta.selectionEnd);
+      onEditChange?.(newVal);
+      const newPos = start + 1 + indent.length + extra.length;
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = newPos;
+      });
+    }
+  };
+
   // Tokenize each line with Prism
   const highlightedLines = useMemo(() => {
     const grammar = Prism.languages[lang];
@@ -176,7 +232,7 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
       data-component-id={component.id}
       className="doccodeblock-component"
       onMouseDown={onMouseDown}
-      style={{ cursor: 'grab' }}
+      style={{ cursor: editingField ? 'text' : 'grab' }}
     >
       {/* Body background */}
       <rect x={x} y={y} width={width} height={height} rx={rx} fill={bodyBg} stroke={bodyBorder} strokeWidth={1.5} className="code-body" />
@@ -186,15 +242,38 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
       <rect x={x} y={y + headerHeight - rx} width={width} height={rx} fill={headerBg} />
       <line x1={x} y1={y + headerHeight} x2={x + width} y2={y + headerHeight} stroke={headerBorder} strokeWidth={1} className="code-header-line" />
 
-      {/* File name */}
-      <text
-        x={x + 24 * scale} y={y + headerHeight / 2 + titleFontSize * 0.35}
-        fontFamily="'Courier New', monospace" fontSize={titleFontSize} fill={headerText}
-        className="code-title-text" style={{ cursor: 'text' }}
-        onDoubleClick={(e) => onDoubleClick(e, 'codeTitle')}
-      >
-        {codeTitle} ¶
-      </text>
+      {/* File name - show input when editing, otherwise show text */}
+      {editingField === 'codeTitle' ? (
+        <foreignObject x={x + 12 * scale} y={y + 2 * scale} width={width - 60 * scale} height={headerHeight - 4 * scale}>
+          <input
+            ref={titleRef}
+            value={editText || ''}
+            onChange={(e) => onEditChange?.(e.target.value)}
+            onBlur={() => onEditCommit?.()}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') onEditCommit?.(); }}
+            style={{
+              width: '100%',
+              height: '100%',
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: headerText,
+              fontFamily: "'Courier New', monospace",
+              fontSize: `${titleFontSize}px`,
+              padding: `0 ${12 * scale}px`,
+            }}
+          />
+        </foreignObject>
+      ) : (
+        <text
+          x={x + 24 * scale} y={y + headerHeight / 2 + titleFontSize * 0.35}
+          fontFamily="'Courier New', monospace" fontSize={titleFontSize} fill={headerText}
+          className="code-title-text" style={{ cursor: 'text' }}
+          onDoubleClick={(e) => onDoubleClick(e, 'codeTitle')}
+        >
+          {codeTitle} ¶
+        </text>
+      )}
 
       {/* Copy icon */}
       <g className="code-copy-icon" transform={`translate(${x + width - 24 * scale - copyIconSize}, ${y + (headerHeight - copyIconSize) / 2})`}>
@@ -202,48 +281,78 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
         <rect x={5 * scale} y={0} width={10 * scale} height={12 * scale} rx={1.5 * scale} fill={headerBg} stroke={copyIconColor} strokeWidth={1.3 * scale} />
       </g>
 
-      {/* Code content with line numbers */}
-      <g className="code-content-text" style={{ cursor: 'text' }} onDoubleClick={(e) => onDoubleClick(e as any, 'codeContent')}>
-        {highlightedLines.map((segments, lineIdx) => {
-          const lineY = y + codePadTop + lineIdx * codeLineHeight;
-          if (lineY + codeFontSize > y + height - 10 * scale) return null;
+      {/* Code content - show textarea when editing, otherwise show highlighted code */}
+      {editingField === 'codeContent' ? (
+        <foreignObject x={x + codePadLeft - 4 * scale} y={y + headerHeight + 4 * scale} width={width - codePadLeft - 8 * scale} height={height - headerHeight - 8 * scale}>
+          <textarea
+            ref={codeRef}
+            value={editText || ''}
+            onChange={(e) => onEditChange?.(e.target.value)}
+            onBlur={() => onEditCommit?.()}
+            onKeyDown={handleCodeKeyDown}
+            style={{
+              width: '100%',
+              height: '100%',
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              resize: 'none',
+              color: isDark ? '#e2e8f0' : '#1e293b',
+              fontFamily: "'Courier New', monospace",
+              fontSize: `${codeFontSize}px`,
+              lineHeight: `${codeLineHeight}px`,
+              padding: `${12 * scale}px ${4 * scale}px`,
+              tabSize: 4,
+              whiteSpace: 'pre',
+              overflowWrap: 'normal',
+              overflow: 'auto',
+            }}
+            spellCheck={false}
+          />
+        </foreignObject>
+      ) : (
+        <g className="code-content-text" style={{ cursor: 'text' }} onDoubleClick={(e) => onDoubleClick(e as any, 'codeContent')}>
+          {highlightedLines.map((segments, lineIdx) => {
+            const lineY = y + codePadTop + lineIdx * codeLineHeight;
+            if (lineY + codeFontSize > y + height - 10 * scale) return null;
 
-          return (
-            <g key={lineIdx} className="code-line">
-              {/* Line number */}
-              <text
-                x={x + 24 * scale + lineNumWidth - 8 * scale}
-                y={lineY}
-                fontFamily="'Courier New', monospace"
-                fontSize={codeFontSize}
-                fill={lineNumColor}
-                textAnchor="end"
-              >
-                {lineIdx + 1}
-              </text>
+            return (
+              <g key={lineIdx} className="code-line">
+                {/* Line number */}
+                <text
+                  x={x + 24 * scale + lineNumWidth - 8 * scale}
+                  y={lineY}
+                  fontFamily="'Courier New', monospace"
+                  fontSize={codeFontSize}
+                  fill={lineNumColor}
+                  textAnchor="end"
+                >
+                  {lineIdx + 1}
+                </text>
 
-              {/* Code tokens */}
-              <text
-                x={x + codePadLeft}
-                y={lineY}
-                fontFamily="'Courier New', monospace"
-                fontSize={codeFontSize}
-              >
-                {segments.map((seg, segIdx) => (
-                  <tspan
-                    key={segIdx}
-                    fill={seg.color}
-                    fontWeight={seg.bold ? 700 : 400}
-                    fontStyle={seg.italic ? 'italic' : 'normal'}
-                  >
-                    {seg.text}
-                  </tspan>
-                ))}
-              </text>
-            </g>
-          );
-        })}
-      </g>
+                {/* Code tokens */}
+                <text
+                  x={x + codePadLeft}
+                  y={lineY}
+                  fontFamily="'Courier New', monospace"
+                  fontSize={codeFontSize}
+                >
+                  {segments.map((seg, segIdx) => (
+                    <tspan
+                      key={segIdx}
+                      fill={seg.color}
+                      fontWeight={seg.bold ? 700 : 400}
+                      fontStyle={seg.italic ? 'italic' : 'normal'}
+                    >
+                      {seg.text}
+                    </tspan>
+                  ))}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
 
       {/* Selection */}
       {isSelected && (

@@ -254,8 +254,8 @@ const Canvas: React.FC = () => {
         </div>
       )}
 
-      {/* Inline text editor overlay */}
-      {editingId && editPos && (
+      {/* Inline text editor overlay (skip for docCodeBlock which has its own inline editor) */}
+      {editingId && editPos && (() => { const ec = components.find(c => c.id === editingId); return ec?.type !== 'docCodeBlock'; })() && (
         <div
           className="fixed z-50"
           style={{ left: editPos.x, top: editPos.y }}
@@ -504,6 +504,7 @@ const Canvas: React.FC = () => {
                 );
               }
               if (comp.type === 'docCodeBlock') {
+                const isEditingThis = editingId === comp.id;
                 return (
                   <DocCodeBlockComponent
                     key={comp.id}
@@ -515,19 +516,12 @@ const Canvas: React.FC = () => {
                       setEditingId(comp.id);
                       setEditField(field);
                       setEditText(comp.props[field] || '');
-                      const svg = svgRef.current!;
-                      const rect = svg.getBoundingClientRect();
-                      const scaleX = rect.width / CANVAS_W;
-                      const scaleY = rect.height / CANVAS_H;
-                      const cScale = (comp.props.width || 520) / 520;
-                      const yOffset = field === 'codeTitle' ? 10 * cScale : 36 * cScale + 10;
-                      setEditPos({
-                        x: comp.props.x * scaleX + rect.left + 24 * cScale * scaleX,
-                        y: (comp.props.y + yOffset) * scaleY + rect.top,
-                        width: (comp.props.width || 520) * scaleX - 60,
-                      });
                     }}
                     onResizeStart={(e, handle) => handleResizeStart(e, comp.id, handle)}
+                    editingField={isEditingThis ? editField as 'codeTitle' | 'codeContent' : null}
+                    editText={isEditingThis ? editText : undefined}
+                    onEditChange={(text) => setEditText(text)}
+                    onEditCommit={commitEdit}
                   />
                 );
               }
