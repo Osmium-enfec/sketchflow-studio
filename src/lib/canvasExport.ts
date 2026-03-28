@@ -133,7 +133,7 @@ export const exportMP4 = async (
     }
 
     // Small delay to let MediaRecorder process the frame
-    await waitFrame();
+    await delay(1000 / FPS);
 
     if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames}`);
   }
