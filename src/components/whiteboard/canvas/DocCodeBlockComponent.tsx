@@ -157,33 +157,24 @@ const DocCodeBlockComponent: React.FC<Props> = ({ component, isSelected, onMouse
           if (lineY + codeFontSize > y + height - 10 * scale) return null;
           const segments = highlightLine(line);
 
-          // Calculate x offsets for each segment
-          let currentX = x + codePadLeft;
           return (
             <text
               key={lineIdx}
+              x={x + codePadLeft}
               y={lineY}
               fontFamily="'Courier New', monospace"
               fontSize={codeFontSize}
               className="code-line"
             >
-              {segments.map((seg, segIdx) => {
-                const el = (
-                  <tspan key={segIdx} x={undefined} fill={seg.color} fontWeight={['from', 'import', 'def', 'return', 'class', 'function', 'const', 'let', 'var', 'export'].includes(seg.text.trim()) ? 700 : 400}>
-                    {seg.text}
-                  </tspan>
-                );
-                return el;
-              })}
-              {/* Position the whole text element */}
-              <tspan x={x + codePadLeft} />
+              {segments.map((seg, segIdx) => (
+                <tspan key={segIdx} fill={seg.color} fontWeight={['from', 'import', 'def', 'return', 'class', 'function', 'const', 'let', 'var', 'export'].includes(seg.text.trim()) ? 700 : 400}>
+                  {seg.text}
+                </tspan>
+              ))}
             </text>
           );
         })}
       </g>
-
-      {/* Fix: position tspan properly */}
-      {/* Re-render code with proper positioning */}
 
       {/* Selection */}
       {isSelected && (
