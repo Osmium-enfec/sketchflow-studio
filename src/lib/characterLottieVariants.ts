@@ -12,14 +12,16 @@ export interface LottieVariant {
   translates: boolean;
   /** Whether the source animation naturally faces right */
   facesRight: boolean;
+  /** Whether this variant has a looping animation */
+  animates: boolean;
 }
 
 export const LOTTIE_VARIANTS: LottieVariant[] = [
-  { key: 'femaleWalking', label: 'Female Walking', data: femaleWalkingData, translates: true, facesRight: false },
-  { key: 'maleWalking', label: 'Male Walking', data: maleWalkingData, translates: true, facesRight: true },
-  { key: 'happyBoy', label: 'Happy Boy', data: happyBoyData, translates: false, facesRight: true },
-  { key: 'talkingGreenMan', label: 'Talking Man', data: talkingGreenManData, translates: false, facesRight: true },
-  { key: 'manRunning', label: 'Man Running', data: manRunningData, translates: true, facesRight: true },
+  { key: 'femaleWalking', label: 'Female Walking', data: femaleWalkingData, translates: true, facesRight: false, animates: true },
+  { key: 'maleWalking', label: 'Male Walking', data: maleWalkingData, translates: true, facesRight: true, animates: true },
+  { key: 'happyBoy', label: 'Happy Boy', data: happyBoyData, translates: false, facesRight: true, animates: true },
+  { key: 'talkingGreenMan', label: 'Talking Man', data: talkingGreenManData, translates: false, facesRight: true, animates: true },
+  { key: 'manRunning', label: 'Man Running', data: manRunningData, translates: true, facesRight: false, animates: true },
 ];
 
 export function getVariantData(key: string): LottieVariant {
