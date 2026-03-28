@@ -1,6 +1,8 @@
 import jsPDF from 'jspdf';
 import { CanvasRenderer } from './canvasRenderer';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { buildTimeline } from '@/timeline/timelineEngine';
+import { loadFFmpeg } from './ffmpegEncoder';
 
 /**
  * Serialize SVG to a data URL image, then resolve with the rendered canvas.
@@ -51,109 +53,85 @@ export const exportPDF = async (svgEl: SVGSVGElement, canvasW: number, canvasH: 
 };
 
 /**
- * Record the canvas animation as WebM using offscreen Canvas rendering.
- * Uses CanvasRenderer to draw SVG content + Lottie characters programmatically,
- * avoiding html2canvas viewport/alignment issues.
+ * Export animation as H.264 MP4 using deterministic frame-by-frame rendering + FFmpeg.wasm.
+ * 
+ * How it works (Canva-style approach):
+ * 1. Build a paused GSAP timeline
+ * 2. Step through it frame-by-frame with timeline.seek()
+ * 3. At each frame, render SVG + Lottie to an offscreen canvas
+ * 4. Collect frames as JPEG images
+ * 5. Encode into H.264 MP4 with FFmpeg.wasm
+ * 6. Download the result
  */
-export const exportMP4 = (
+export const exportMP4 = async (
   svgEl: SVGSVGElement,
   canvasW: number,
   canvasH: number,
-  onStart: () => void,
+  components: WhiteboardComponent[],
   fileName = 'whiteboard-animation',
-  components: WhiteboardComponent[] = []
 ): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const renderer = new CanvasRenderer(canvasW, canvasH);
-    const recCanvas = renderer.getCanvas();
+  const FPS = 30;
 
-    // Initialize offscreen Lottie instances for walking characters
-    renderer.initLottieInstances(components);
+  // 1. Setup offscreen renderer + lottie instances
+  const renderer = new CanvasRenderer(canvasW, canvasH);
+  renderer.initLottieInstances(components);
 
-    // Hook DOM lottie controls to sync offscreen instances
-    renderer.hookDomControls(svgEl, components);
+  // 2. Replace DOM lottie controls with deterministic state trackers
+  //    (must happen BEFORE building the timeline)
+  renderer.setupDeterministicControls(svgEl, components);
 
-    const stream = recCanvas.captureStream(30);
-    
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-      ? 'video/webm;codecs=vp9'
-      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
-        ? 'video/webm;codecs=vp8'
-        : 'video/webm';
-    
-    const recorder = new MediaRecorder(stream, {
-      mimeType,
-      videoBitsPerSecond: 8_000_000,
+  // 3. Build paused GSAP timeline
+  const timeline = buildTimeline(svgEl, components);
+  const duration = timeline.duration();
+  const totalFrames = Math.ceil(duration * FPS) + 1;
+
+  // 4. Load FFmpeg.wasm (cached after first load)
+  const ffmpeg = await loadFFmpeg();
+
+  // 5. Render each frame deterministically
+  for (let f = 0; f < totalFrames; f++) {
+    const t = Math.min(f / FPS, duration);
+    renderer.setCurrentTime(t);
+    timeline.seek(t);
+
+    await renderer.renderFrame(svgEl);
+
+    // Convert canvas to JPEG and write to FFmpeg virtual FS
+    const blob = await new Promise<Blob>((resolve) => {
+      renderer.getCanvas().toBlob((b) => resolve(b!), 'image/jpeg', 0.92);
     });
-    
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-    
-    recorder.onstop = () => {
-      capturing = false;
-      renderer.destroy();
-      const blob = new Blob(chunks, { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${fileName}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
-      resolve();
-    };
+    const data = new Uint8Array(await blob.arrayBuffer());
+    await ffmpeg.writeFile(`f${String(f).padStart(5, '0')}.jpg`, data);
+  }
 
-    recorder.onerror = (e) => {
-      renderer.destroy();
-      reject(e);
-    };
+  // 6. Encode frames into H.264 MP4
+  await ffmpeg.exec([
+    '-framerate', String(FPS),
+    '-i', 'f%05d.jpg',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-preset', 'ultrafast',
+    '-crf', '23',
+    'output.mp4',
+  ]);
 
-    recorder.start();
-    onStart();
-    
-    let capturing = true;
-    let lastCaptureTime = 0;
-    const CAPTURE_INTERVAL = 33; // ~30fps
+  // 7. Download the MP4
+  const output = await ffmpeg.readFile('output.mp4');
+  const mp4Blob = new Blob([output as Uint8Array], { type: 'video/mp4' });
+  const url = URL.createObjectURL(mp4Blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${fileName}.mp4`;
+  a.click();
+  URL.revokeObjectURL(url);
 
-    const captureFrame = async (timestamp: number) => {
-      if (!capturing) return;
-      
-      if (timestamp - lastCaptureTime < CAPTURE_INTERVAL) {
-        requestAnimationFrame(captureFrame);
-        return;
-      }
-      lastCaptureTime = timestamp;
+  // 8. Cleanup
+  renderer.destroy();
+  timeline.seek(0);
+  timeline.kill();
 
-      try {
-        await renderer.renderFrame(svgEl);
-      } catch (_) {
-        // Skip frame on error
-      }
-      if (capturing) {
-        requestAnimationFrame(captureFrame);
-      }
-    };
-    
-    requestAnimationFrame(captureFrame);
-    
-    const onEnd = () => {
-      setTimeout(() => {
-        capturing = false;
-        if (recorder.state === 'recording') recorder.stop();
-        window.removeEventListener('whiteboard-animation-end', onEnd);
-      }, 500);
-    };
-    
-    window.addEventListener('whiteboard-animation-end', onEnd);
-    
-    // Safety timeout: max 60s recording
-    setTimeout(() => {
-      if (recorder.state === 'recording') {
-        capturing = false;
-        recorder.stop();
-        window.removeEventListener('whiteboard-animation-end', onEnd);
-      }
-    }, 60_000);
-  });
+  for (let f = 0; f < totalFrames; f++) {
+    try { await ffmpeg.deleteFile(`f${String(f).padStart(5, '0')}.jpg`); } catch { /* ignore */ }
+  }
+  try { await ffmpeg.deleteFile('output.mp4'); } catch { /* ignore */ }
 };
