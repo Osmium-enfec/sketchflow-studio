@@ -322,7 +322,7 @@ const Canvas: React.FC = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            onClick={() => { selectComponent(null); if (editingId) commitEdit(); }}
+            onClick={(e) => { if (e.target === e.currentTarget) { selectComponent(null); if (editingId) commitEdit(); } }}
           >
             <defs>
               <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
