@@ -17,6 +17,7 @@ const TopToolbar: React.FC = () => {
   const boxesRef = useRef<HTMLDivElement>(null);
   const charsRef = useRef<HTMLDivElement>(null);
   const docsRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -25,6 +26,7 @@ const TopToolbar: React.FC = () => {
       if (boxesRef.current && !boxesRef.current.contains(e.target as Node)) setBoxesOpen(false);
       if (charsRef.current && !charsRef.current.contains(e.target as Node)) setCharsOpen(false);
       if (docsRef.current && !docsRef.current.contains(e.target as Node)) setDocsOpen(false);
+      if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) { setCanvasOpen(false); setDocSubOpen(false); }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
