@@ -335,12 +335,13 @@ const Canvas: React.FC = () => {
             const editComp = components.find(c => c.id === editingId);
             const isDarkComp = editComp?.props?.variant === 'dark';
             const isCodeField = editField === 'codeContent';
+            const isContentType = editComp?.type === 'content';
             const isCodeOrNote = editComp?.type === 'docCodeBlock' || editComp?.type === 'noteBox';
             const bgColor = isCodeOrNote && isDarkComp ? '#0b2e1f' : isCodeOrNote ? '#f8faf9' : undefined;
             const textColor = isCodeOrNote && isDarkComp ? '#e2e8f0' : isCodeOrNote ? '#1e293b' : undefined;
             const borderColor = isCodeOrNote && isDarkComp ? '#0C4B33' : undefined;
 
-            return isCodeField ? (
+            return (isCodeField || isContentType) ? (
               <textarea
                 autoFocus
                 value={editText}
