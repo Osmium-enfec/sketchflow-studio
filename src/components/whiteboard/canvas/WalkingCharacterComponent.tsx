@@ -18,7 +18,7 @@ const WalkingInner: React.FC<{ width: number; height: number; flipped: boolean }
     style: {
       width: '100%',
       height: '100%',
-      transform: flipped ? 'scaleX(-1)' : 'scaleX(1)',
+      transform: flipped ? 'scaleX(1)' : 'scaleX(-1)',
     },
   });
 
