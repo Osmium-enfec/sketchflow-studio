@@ -321,12 +321,21 @@ const Canvas: React.FC = () => {
           {selectedComp.type === 'content' && (
             <>
               <div className="h-5 w-px bg-border mx-1" />
-              <span className="text-xs text-muted-foreground font-medium">Width:</span>
+              <span className="text-xs text-muted-foreground font-medium">W:</span>
               <button onClick={() => updateComponentProps(selectedComp.id, { width: Math.max(150, (selectedComp.props.width || 500) - 50) })}
                 className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">−</button>
-              <span className="text-xs text-muted-foreground min-w-[3rem] text-center">{selectedComp.props.width || 500}px</span>
+              <span className="text-xs text-muted-foreground min-w-[2.5rem] text-center">{selectedComp.props.width || 500}</span>
               <button onClick={() => updateComponentProps(selectedComp.id, { width: (selectedComp.props.width || 500) + 50 })}
                 className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">+</button>
+              <div className="h-5 w-px bg-border mx-1" />
+              <span className="text-xs text-muted-foreground font-medium">H:</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: Math.max(40, (selectedComp.props.height || 100) - 30) })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">−</button>
+              <span className="text-xs text-muted-foreground min-w-[2.5rem] text-center">{selectedComp.props.height || 'auto'}</span>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: (selectedComp.props.height || 100) + 30 })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border">+</button>
+              <button onClick={() => updateComponentProps(selectedComp.id, { height: undefined })}
+                className="px-1.5 py-0.5 text-xs font-medium hover:bg-muted rounded transition-colors border text-muted-foreground">Auto</button>
             </>
           )}
         </div>
