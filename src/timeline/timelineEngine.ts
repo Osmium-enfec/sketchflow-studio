@@ -467,18 +467,14 @@ function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
   const walkDistance = Number(el.getAttribute('data-walk-distance') || 200);
   const flipped = el.getAttribute('data-walk-flipped') === '1';
   const translates = el.getAttribute('data-walk-translates') !== '0';
-  const facesRight = el.getAttribute('data-walk-faces-right') === '1';
-
-  // Direction: if facesRight, default moves right (+1), flipped moves left (-1)
-  // If !facesRight (faces left), we flip it to face right by default, so default moves right (+1), flipped moves left (-1)
   const direction = flipped ? -1 : 1;
+  const duration = 2.5;
 
-  // Fade in (but ensure it stays visible after)
   if (foreignObj) {
     gsap.set(foreignObj, { opacity: 1 });
   }
 
-  // Start lottie playback
+  // Start lottie playback at the beginning of this component's turn
   tl.call(() => {
     const controlEl = el.querySelector('[data-lottie-control]') as any;
     if (controlEl?.__lottiePlay) controlEl.__lottiePlay();
@@ -489,10 +485,19 @@ function animateWalkingCharacter(el: SVGGElement): gsap.core.Timeline {
     const startX = Number(foreignObj.getAttribute('x') || 0);
     tl.to(foreignObj, {
       attr: { x: startX + walkDistance * direction },
-      duration: 2.5,
+      duration,
       ease: 'none',
     }, 0.1);
+  } else {
+    // For stationary variants, hold for the duration so the Lottie plays during this slot
+    tl.to({}, { duration });
   }
+
+  // Stop lottie playback at the end of this component's turn
+  tl.call(() => {
+    const controlEl = el.querySelector('[data-lottie-control]') as any;
+    if (controlEl?.__lottieStop) controlEl.__lottieStop();
+  });
 
   return tl;
 }
