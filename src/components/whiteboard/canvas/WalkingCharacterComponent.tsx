@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useLottie } from 'lottie-react';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
-import femaleWalkingData from '@/assets/female-walking.json';
+import { getVariantData } from '@/lib/characterLottieVariants';
 
 interface Props {
   component: WhiteboardComponent;
