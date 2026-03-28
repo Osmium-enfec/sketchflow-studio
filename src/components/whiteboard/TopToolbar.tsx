@@ -282,16 +282,6 @@ const TopToolbar: React.FC = () => {
                 <PersonStanding className="h-4 w-4 text-muted-foreground" /> Button Shirt
               </button>
               <div className="border-t my-1" />
-              <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie Characters</div>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'walking' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Walking
-              </button>
-              <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'running' }); closeAll(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
-                <Film className="h-4 w-4 text-muted-foreground" /> Running
-              </button>
-              <div className="border-t my-1" />
               <div className="px-4 py-1 text-xs text-muted-foreground font-semibold uppercase">Lottie Effects</div>
               <button onClick={() => { addComponent('lottieCharacter', { lottiePreset: 'bouncing' }); closeAll(); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
