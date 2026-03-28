@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { WhiteboardComponent } from '@/store/whiteboardStore';
+import { applyCharacterAnimation, CharacterAnimation } from '@/lib/characterAnimations';
 
 const DURATION: Record<string, number> = {
   title: 1.2,
@@ -19,6 +20,7 @@ const DURATION: Record<string, number> = {
   noteBox: 1.5,
   docCodeBlock: 1.8,
   markdown: 1.5,
+  lottieCharacter: 2.0,
 };
 
 function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Timeline {
@@ -43,7 +45,6 @@ function animateTyping(textEl: SVGTextElement, duration: number): gsap.core.Time
     },
   });
 
-  // Add a blinking cursor effect via a temporary tspan
   tl.set(textEl, {}, '+=0.1');
 
   return tl;
@@ -67,7 +68,6 @@ function animateBox(el: SVGGElement): gsap.core.Timeline {
   const roughRect = el.querySelector('.rough-rect');
   const textEl = el.querySelector('text') as SVGTextElement | null;
 
-  // Draw box outline first
   if (roughRect) {
     const paths = roughRect.querySelectorAll('path');
     paths.forEach((path) => {
@@ -77,7 +77,6 @@ function animateBox(el: SVGGElement): gsap.core.Timeline {
     });
   }
 
-  // Then type in the text
   if (textEl) {
     const fullText = textEl.textContent || '';
     textEl.setAttribute('data-full-text', fullText);
@@ -145,12 +144,10 @@ function animateDevice(el: SVGGElement): gsap.core.Timeline {
   const screen = el.querySelector('.device-screen');
   const strokes = el.querySelectorAll('.device-stroke');
 
-  // Hide screen initially
   if (screen) {
     gsap.set(screen, { opacity: 0 });
   }
 
-  // Draw strokes one by one
   strokes.forEach((pathEl, i) => {
     const path = pathEl as SVGPathElement;
     const length = path.getTotalLength();
@@ -162,7 +159,6 @@ function animateDevice(el: SVGGElement): gsap.core.Timeline {
     }, i === 0 ? 0 : '>-0.05');
   });
 
-  // Fade in screen after outline is drawn
   if (screen) {
     tl.to(screen, { opacity: 1, duration: 0.4, ease: 'power2.out' }, '>-0.1');
   }
@@ -188,7 +184,7 @@ function animateGradientArrow(el: SVGGElement): gsap.core.Timeline {
 }
 
 function animateCurvedArrow(el: SVGGElement): gsap.core.Timeline {
-  return animateArrow(el); // Same stroke-draw logic
+  return animateArrow(el);
 }
 
 function animateFoldedBox(el: SVGGElement): gsap.core.Timeline {
@@ -222,13 +218,11 @@ function animateCodeBox(el: SVGGElement): gsap.core.Timeline {
   const body = el.querySelector('.codebox-body') as SVGRectElement | null;
   const dots = el.querySelectorAll('.codebox-dot');
 
-  // Fade in body
   if (body) {
     gsap.set(body, { opacity: 0, scaleX: 0.8, scaleY: 0.8, transformOrigin: 'center' });
     tl.to(body, { opacity: 1, scaleX: 1, scaleY: 1, duration: 0.6, ease: 'power2.out' });
   }
 
-  // Pop in dots one by one
   dots.forEach((dot, i) => {
     gsap.set(dot, { opacity: 0, scale: 0, transformOrigin: 'center' });
     tl.to(dot, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(3)' }, 0.5 + i * 0.12);
@@ -237,7 +231,7 @@ function animateCodeBox(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
-function animateIndianCharacter(el: SVGGElement): gsap.core.Timeline {
+function animateIndianCharacter(el: SVGGElement, comp?: WhiteboardComponent): gsap.core.Timeline {
   const tl = gsap.timeline();
   // Fade + scale the whole face in
   gsap.set(el, { opacity: 0, scale: 0.7, transformOrigin: 'center center' });
@@ -250,16 +244,27 @@ function animateIndianCharacter(el: SVGGElement): gsap.core.Timeline {
     tl.to(part, { opacity: 1, duration: 0.15, ease: 'power2.out' }, 0.3 + i * 0.08);
   });
 
+  // After reveal, trigger character animation if set
+  if (comp?.props?.animation && comp.props.animation !== 'idle') {
+    tl.call(() => {
+      const mouthEl = el.querySelector('.indian-lips');
+      const headEl = el.querySelector('g[class=""]') || el.children[0]; // head group
+      applyCharacterAnimation(comp.props.animation as CharacterAnimation, {
+        mouthEl,
+        headEl: headEl as Element,
+        bodyEl: headEl as Element,
+      });
+    }, [], '>');
+  }
+
   return tl;
 }
 
-function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
+function animateOpenPeep(el: SVGGElement, comp?: WhiteboardComponent): gsap.core.Timeline {
   const tl = gsap.timeline();
 
-  // Collect all paths inside the peep component
   const allPaths = el.querySelectorAll('path');
 
-  // First pass: set all paths invisible
   allPaths.forEach((path) => {
     const pathEl = path as SVGPathElement;
     try {
@@ -277,7 +282,6 @@ function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
     }
   });
 
-  // Animate body paths first, then head/hair, then face
   const groups = ['.peep-body', '.peep-hair', '.peep-face', '.peep-beard', '.peep-accessory'];
   let groupDelay = 0;
 
@@ -294,14 +298,12 @@ function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
         const length = pathEl.getTotalLength();
         const drawDuration = Math.min(1.5, Math.max(0.3, length / 2000));
 
-        // Stroke draw
         tl.to(pathEl, {
           strokeDashoffset: 0,
           duration: drawDuration,
           ease: 'power1.inOut',
         }, groupDelay + i * 0.08);
 
-        // Fill reveal slightly after stroke starts
         tl.to(pathEl, {
           fillOpacity: 1,
           duration: 0.4,
@@ -314,6 +316,20 @@ function animateOpenPeep(el: SVGGElement): gsap.core.Timeline {
 
     groupDelay += 0.5;
   });
+
+  // After reveal, trigger character animation if set
+  if (comp?.props?.animation && comp.props.animation !== 'idle') {
+    tl.call(() => {
+      const faceEl = el.querySelector('.peep-face');
+      const headEl = el.querySelector('.peep-head');
+      const bodyEl = el.querySelector('.peep-body');
+      applyCharacterAnimation(comp.props.animation as CharacterAnimation, {
+        mouthEl: faceEl,
+        headEl: headEl,
+        bodyEl: bodyEl,
+      });
+    }, [], '>');
+  }
 
   return tl;
 }
@@ -335,34 +351,28 @@ function animateDocumentation(el: SVGGElement): gsap.core.Timeline {
   const footerLine = el.querySelector('.doc-footer-line');
   const footerText = el.querySelector('.doc-footer-text');
 
-  // Page slides in and fades
   if (shadow) { gsap.set(shadow, { opacity: 0 }); tl.to(shadow, { opacity: 1, duration: 0.3 }, 0); }
   if (page) { gsap.set(page, { opacity: 0, scaleY: 0.9, transformOrigin: 'top center' }); tl.to(page, { opacity: 1, scaleY: 1, duration: 0.5, ease: 'power2.out' }, 0); }
 
-  // Header
   if (header) { gsap.set(header, { opacity: 0 }); tl.to(header, { opacity: 1, duration: 0.3 }, 0.2); }
   if (headerLine) { gsap.set(headerLine, { opacity: 0 }); tl.to(headerLine, { opacity: 1, duration: 0.2 }, 0.3); }
   if (icon) { gsap.set(icon, { opacity: 0, scale: 0 }); tl.to(icon, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.3); }
   if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.4); }
 
-  // Heading
   if (headingBg) { gsap.set(headingBg, { scaleX: 0, transformOrigin: 'left' }); tl.to(headingBg, { scaleX: 1, duration: 0.4, ease: 'power2.out' }, 0.5); }
   if (headingUnderline) { gsap.set(headingUnderline, { scaleX: 0, transformOrigin: 'left' }); tl.to(headingUnderline, { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 0.6); }
 
-  // Text lines stagger
   textLines.forEach((line, i) => {
     gsap.set(line, { scaleX: 0, transformOrigin: 'left' });
     tl.to(line, { scaleX: 1, duration: 0.2, ease: 'power1.out' }, 0.7 + i * 0.06);
   });
 
-  // Code block
   if (codeBlock) { gsap.set(codeBlock, { opacity: 0, scaleY: 0, transformOrigin: 'top' }); tl.to(codeBlock, { opacity: 1, scaleY: 1, duration: 0.3, ease: 'power2.out' }, 1.2); }
   codeLines.forEach((line, i) => {
     gsap.set(line, { scaleX: 0, transformOrigin: 'left' });
     tl.to(line, { scaleX: 1, duration: 0.2, ease: 'power1.out' }, 1.3 + i * 0.08);
   });
 
-  // Footer
   if (footerLine) { gsap.set(footerLine, { opacity: 0 }); tl.to(footerLine, { opacity: 1, duration: 0.2 }, 1.6); }
   if (footerText) { gsap.set(footerText, { opacity: 0 }); tl.to(footerText, { opacity: 1, duration: 0.2 }, 1.7); }
 
@@ -379,20 +389,15 @@ function animateNoteBox(el: SVGGElement): gsap.core.Timeline {
   const titleText = el.querySelector('.note-title-text');
   const contentText = el.querySelector('.note-content-text');
 
-  // Slide in background
   if (bg) { gsap.set(bg, { opacity: 0, scaleX: 0.8, transformOrigin: 'left center' }); tl.to(bg, { opacity: 1, scaleX: 1, duration: 0.4, ease: 'power2.out' }, 0); }
   
-  // Left bar grows down
   if (leftBar) { gsap.set(leftBar, { scaleY: 0, transformOrigin: 'top' }); tl.to(leftBar, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0.1); }
   if (leftBarOverlay) { gsap.set(leftBarOverlay, { scaleY: 0, transformOrigin: 'top' }); tl.to(leftBarOverlay, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0.1); }
 
-  // Icon pops in
   if (icon) { gsap.set(icon, { opacity: 0, scale: 0 }); tl.to(icon, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.3); }
 
-  // Title fades in
   if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.4); }
 
-  // Content fades in
   if (contentText) { gsap.set(contentText, { opacity: 0 }); tl.to(contentText, { opacity: 1, duration: 0.4 }, 0.6); }
 
   return tl;
@@ -409,20 +414,17 @@ function animateDocCodeBlock(el: SVGGElement): gsap.core.Timeline {
   const contentText = el.querySelector('.code-content-text');
   const codeLines = el.querySelectorAll('.code-line');
 
-  // Body fades in
   if (body) { gsap.set(body, { opacity: 0, scaleY: 0.9, transformOrigin: 'top center' }); tl.to(body, { opacity: 1, scaleY: 1, duration: 0.4, ease: 'power2.out' }, 0); }
   if (header) { gsap.set(header, { opacity: 0 }); tl.to(header, { opacity: 1, duration: 0.3 }, 0.1); }
   if (headerLine) { gsap.set(headerLine, { opacity: 0 }); tl.to(headerLine, { opacity: 1, duration: 0.2 }, 0.2); }
   if (titleText) { gsap.set(titleText, { opacity: 0 }); tl.to(titleText, { opacity: 1, duration: 0.3 }, 0.3); }
   if (copyIcon) { gsap.set(copyIcon, { opacity: 0, scale: 0 }); tl.to(copyIcon, { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' }, 0.3); }
 
-  // Code lines appear one by one
   codeLines.forEach((line, i) => {
     gsap.set(line, { opacity: 0 });
     tl.to(line, { opacity: 1, duration: 0.15 }, 0.5 + i * 0.1);
   });
 
-  // Fallback for content text
   if (contentText && codeLines.length === 0) {
     gsap.set(contentText, { opacity: 0 });
     tl.to(contentText, { opacity: 1, duration: 0.4 }, 0.5);
@@ -458,7 +460,31 @@ function animateMarkdown(el: SVGGElement): gsap.core.Timeline {
   return tl;
 }
 
-const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
+function animateLottieCharacter(el: SVGGElement): gsap.core.Timeline {
+  const tl = gsap.timeline();
+
+  // Fade in the foreignObject
+  const foreignObj = el.querySelector('foreignObject');
+  if (foreignObj) {
+    gsap.set(foreignObj, { opacity: 0 });
+    tl.to(foreignObj, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0);
+  }
+
+  // Start Lottie playback after fade-in
+  tl.call(() => {
+    const controlEl = el.querySelector('[data-lottie-control]') as any;
+    if (controlEl?.__lottiePlay) {
+      controlEl.__lottiePlay();
+    }
+  }, [], 0.3);
+
+  return tl;
+}
+
+// Animators that need component data use a wrapper
+type AnimatorFn = (el: SVGGElement, comp?: WhiteboardComponent) => gsap.core.Timeline;
+
+const animators: Record<string, AnimatorFn> = {
   title: animateTitle,
   content: animateContent,
   box: animateBox,
@@ -476,10 +502,17 @@ const animators: Record<string, (el: SVGGElement) => gsap.core.Timeline> = {
   noteBox: animateNoteBox,
   docCodeBlock: animateDocCodeBlock,
   markdown: animateMarkdown,
+  lottieCharacter: animateLottieCharacter,
 };
 
 export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
   gsap.killTweensOf(svgEl.querySelectorAll('*'));
+
+  // Stop all Lottie animations and reset them
+  svgEl.querySelectorAll('[data-lottie-control]').forEach((controlEl: any) => {
+    if (controlEl.__lottieStop) controlEl.__lottieStop();
+    if (controlEl.__lottieGoTo) controlEl.__lottieGoTo(0, true);
+  });
 
   const sorted = [...components].sort((a, b) => a.order - b.order);
 
@@ -494,13 +527,17 @@ export function playAnimation(svgEl: SVGSVGElement, components: WhiteboardCompon
     if (!animator) return;
 
     const startTime = currentTime + (comp.delay || 0);
-    const tl = animator(el);
+    const tl = animator(el, comp);
     master.add(tl, startTime);
 
     currentTime = startTime + (DURATION[comp.type] || 1);
   });
 
   master.eventCallback('onComplete', () => {
+    // Stop Lottie animations when playback ends
+    svgEl.querySelectorAll('[data-lottie-control]').forEach((controlEl: any) => {
+      if (controlEl.__lottieStop) controlEl.__lottieStop();
+    });
     window.dispatchEvent(new CustomEvent('whiteboard-animation-end'));
   });
 
