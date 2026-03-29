@@ -112,6 +112,36 @@ export const exportMP4 = async (
   });
 
   // 5. Setup VideoEncoder
+  // 5. Setup VideoEncoder — try multiple codec profiles
+  const codecs = ['avc1.42001f', 'avc1.4d001f', 'avc1.640028'];
+  let selectedCodec = '';
+
+  for (const codec of codecs) {
+    try {
+      const support = await VideoEncoder.isConfigSupported({
+        codec,
+        width: encoderW,
+        height: encoderH,
+        bitrate: 5_000_000,
+        framerate: FPS,
+      });
+      if (support.supported) {
+        selectedCodec = codec;
+        break;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  if (!selectedCodec) {
+    renderer.destroy();
+    timeline.kill();
+    throw new Error('No supported H.264 codec found in this browser.');
+  }
+
+  console.log('[exportMP4] Using codec:', selectedCodec);
+
   let encodeError: Error | null = null;
 
   const encoder = new VideoEncoder({
@@ -125,7 +155,7 @@ export const exportMP4 = async (
   });
 
   encoder.configure({
-    codec: 'avc1.42001f', // H.264 Baseline Profile
+    codec: selectedCodec,
     width: encoderW,
     height: encoderH,
     bitrate: 5_000_000,
@@ -136,7 +166,9 @@ export const exportMP4 = async (
 
   // 6. Render each frame and encode
   for (let f = 0; f < totalFrames; f++) {
-    if (encodeError) throw encodeError;
+    if (encodeError || encoder.state === 'closed') {
+      throw encodeError || new Error('Encoder was closed unexpectedly');
+    }
 
     const t = Math.min(f / FPS, duration);
     renderer.setCurrentTime(t);
@@ -157,6 +189,11 @@ export const exportMP4 = async (
 
     encoder.encode(frame, { keyFrame: f % 30 === 0 });
     frame.close();
+
+    // Periodically flush to avoid backpressure
+    if (f % 10 === 0 && encoder.encodeQueueSize > 5) {
+      await encoder.flush();
+    }
 
     if (f % 30 === 0) console.log(`[exportMP4] Frame ${f}/${totalFrames}`);
   }
