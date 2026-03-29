@@ -5,7 +5,6 @@ import { getVariantData } from '@/lib/characterLottieVariants';
 interface LottieInstance {
   componentId: string;
   anim: AnimationItem;
-  canvas: HTMLCanvasElement;
   container: HTMLDivElement;
 }
 
@@ -16,7 +15,6 @@ interface LottiePlayState {
 
 /**
  * Styles to inline when serializing SVG for offscreen rendering.
- * This prevents losing CSS-applied styles during serialization.
  */
 const INLINE_STYLE_PROPS = [
   'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-dashoffset',
@@ -27,8 +25,8 @@ const INLINE_STYLE_PROPS = [
 
 /**
  * Deterministic offscreen canvas renderer for video export.
- * Draws each frame programmatically: SVG serialization for static content
- * + lottie-web canvas renderer for character animations.
+ * Uses lottie-web SVG renderer to avoid browser hidden-canvas paint optimization issues.
+ * Each frame: serializes the main SVG + Lottie SVG frames → rasterizes to offscreen canvas.
  */
 export class CanvasRenderer {
   private offscreenCanvas: HTMLCanvasElement;
@@ -53,7 +51,9 @@ export class CanvasRenderer {
   }
 
   /**
-   * Create offscreen lottie-web canvas renderers for each walkingCharacter.
+   * Create offscreen lottie-web SVG renderers for each walkingCharacter.
+   * SVG renderer mode produces DOM SVG elements that can be serialized
+   * regardless of container visibility — no hidden-canvas paint issue.
    */
   async initLottieInstances(components: WhiteboardComponent[]) {
     this.destroyLottieInstances();
@@ -66,61 +66,46 @@ export class CanvasRenderer {
       const w = comp.props.width || 250;
       const h = comp.props.height || 250;
 
-      // lottie-web canvas renderer needs a DOM-attached container
-      // Use visibility:hidden instead of opacity:0 so the browser still paints the canvas
+      // Container can be completely off-screen — SVG renderer doesn't need painting
       const container = document.createElement('div');
-      container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;visibility:hidden;';
+      container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;';
       container.style.width = w + 'px';
       container.style.height = h + 'px';
       document.body.appendChild(container);
 
+      // KEY FIX: Use 'svg' renderer instead of 'canvas'
+      // SVG renderer produces DOM elements that serialize reliably
+      // regardless of visibility — no browser paint optimization issues
       const anim = lottie.loadAnimation({
         container,
-        renderer: 'canvas',
+        renderer: 'svg',
         loop: true,
         autoplay: false,
         animationData: variant.data,
       });
 
-      // Placeholder until DOMLoaded fires
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-
-      const instance: LottieInstance = { componentId: comp.id, anim, canvas, container };
+      const instance: LottieInstance = { componentId: comp.id, anim, container };
       this.lottieInstances.push(instance);
       this.lottiePlayStates.set(comp.id, { playing: false, startTime: 0 });
 
-      // Grab lottie's internal canvas once after it's created
       initPromises.push(new Promise<void>(resolve => {
         anim.addEventListener('DOMLoaded', () => {
-          const internalCanvas = container.querySelector('canvas');
-          if (internalCanvas) {
-            instance.canvas = internalCanvas;
-          }
-          // Render frame 0 to prime the canvas
+          // Prime frame 0
           anim.goToAndStop(0, true);
           resolve();
         });
-        // Fallback timeout in case DOMLoaded doesn't fire
-        setTimeout(() => {
-          const internalCanvas = container.querySelector('canvas');
-          if (internalCanvas) instance.canvas = internalCanvas;
-          resolve();
-        }, 500);
+        // Fallback timeout
+        setTimeout(() => resolve(), 1000);
       }));
     }
 
-    // Wait for all lottie instances to initialize
     await Promise.all(initPromises);
-    // Extra buffer for canvas readiness
-    await new Promise(r => setTimeout(r, 100));
+    // Extra buffer for SVG DOM readiness
+    await new Promise(r => setTimeout(r, 200));
   }
 
   /**
    * Replace DOM lottie controls with deterministic state trackers.
-   * Must be called BEFORE building the GSAP timeline so the timeline's
-   * call() callbacks use our tracking functions instead of real playback.
    */
   setupDeterministicControls(svgEl: SVGSVGElement, components: WhiteboardComponent[]) {
     const walkingComponents = components.filter(c => c.type === 'walkingCharacter');
@@ -134,7 +119,6 @@ export class CanvasRenderer {
 
       controlEl.__lottiePlay = () => {
         const existing = self.lottiePlayStates.get(comp.id);
-        // Only set startTime on the first play call — not on every seek
         if (!existing || !existing.playing) {
           self.lottiePlayStates.set(comp.id, { playing: true, startTime: self._currentTime });
         }
@@ -153,6 +137,7 @@ export class CanvasRenderer {
 
   /**
    * Update all offscreen Lottie instances to the correct frame for the current time.
+   * Since we use SVG renderer, goToAndStop() updates the SVG DOM synchronously.
    */
   private updateLottieFrames(): void {
     for (const inst of this.lottieInstances) {
@@ -170,7 +155,6 @@ export class CanvasRenderer {
       const totalFrames = inst.anim.totalFrames || 60;
       const lottieFrame = Math.floor((elapsed * frameRate) % totalFrames);
       inst.anim.goToAndStop(lottieFrame, true);
-      // Canvas ref was grabbed once during init — no need to re-query DOM
     }
   }
 
@@ -178,31 +162,25 @@ export class CanvasRenderer {
    * Render a single frame: background + SVG static content + Lottie character overlays.
    */
   async renderFrame(svgEl: SVGSVGElement): Promise<void> {
-    // Draw white background first (prevents black screen)
     this.ctx.fillStyle = '#ffffff';
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     await this.drawSvgContent(svgEl);
     this.updateLottieFrames();
-    this.drawLottieCharacters(svgEl);
+    await this.drawLottieCharacters(svgEl);
   }
 
   /**
-   * Inline computed styles directly by matching data-component-id and element tags.
-   * This avoids index mismatch issues when foreignObjects are removed.
+   * Inline computed styles for SVG serialization.
    */
   private inlineStyles(clone: SVGSVGElement, original: SVGSVGElement) {
-    // Walk every element in original that has an inline or computed style we care about
     const origAll = original.querySelectorAll('*');
     
     for (const origEl of Array.from(origAll)) {
-      // Skip foreignObject and its children — we remove those
       if (origEl.tagName === 'foreignObject' || origEl.closest('foreignObject')) continue;
       
       try {
         const computed = window.getComputedStyle(origEl);
-        
-        // Build a unique path to find the same element in the clone
         const componentGroup = origEl.closest('[data-component-id]');
         if (!componentGroup) continue;
         
@@ -210,48 +188,36 @@ export class CanvasRenderer {
         const cloneGroup = clone.querySelector(`[data-component-id="${compId}"]`);
         if (!cloneGroup) continue;
         
-        // Find matching element within the group by class or tag position
         let cloneEl: Element | null = null;
         const className = origEl.getAttribute('class');
         if (className) {
-          // Try matching by first class name for specificity
           const firstClass = className.split(' ')[0];
           cloneEl = cloneGroup.querySelector(`.${CSS.escape(firstClass)}`);
         }
         
         if (!cloneEl) {
-          // Fallback: match by tag name + index within parent
-          const parent = origEl.parentElement;
-          if (parent) {
-            const siblings = Array.from(parent.children);
-            const idx = siblings.indexOf(origEl as HTMLElement);
-            const cloneParentCompId = parent.closest('[data-component-id]')?.getAttribute('data-component-id');
-            if (cloneParentCompId === compId && parent.tagName) {
-              // Find equivalent parent in clone
-              const origPathFromGroup = [];
-              let cur: Element | null = origEl;
-              while (cur && cur !== componentGroup) {
-                const p = cur.parentElement;
-                if (p) {
-                  const childIdx = Array.from(p.children).indexOf(cur as HTMLElement);
-                  origPathFromGroup.unshift(childIdx);
-                }
-                cur = p;
-              }
-              
-              // Navigate same path in clone
-              let cloneCur: Element | null = cloneGroup;
-              for (const childIdx of origPathFromGroup) {
-                if (cloneCur && cloneCur.children[childIdx]) {
-                  cloneCur = cloneCur.children[childIdx];
-                } else {
-                  cloneCur = null;
-                  break;
-                }
-              }
-              cloneEl = cloneCur;
+          // Fallback: match by path from component group
+          const origPathFromGroup: number[] = [];
+          let cur: Element | null = origEl;
+          while (cur && cur !== componentGroup) {
+            const p = cur.parentElement;
+            if (p) {
+              const childIdx = Array.from(p.children).indexOf(cur as HTMLElement);
+              origPathFromGroup.unshift(childIdx);
+            }
+            cur = p;
+          }
+          
+          let cloneCur: Element | null = cloneGroup;
+          for (const childIdx of origPathFromGroup) {
+            if (cloneCur && cloneCur.children[childIdx]) {
+              cloneCur = cloneCur.children[childIdx];
+            } else {
+              cloneCur = null;
+              break;
             }
           }
+          cloneEl = cloneCur;
         }
         
         if (!cloneEl) continue;
@@ -271,21 +237,14 @@ export class CanvasRenderer {
 
   private async drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
-    
-    // Inline styles BEFORE removing foreignObjects to maintain element structure
     this.inlineStyles(clone, svgEl);
-    
-    // Now remove foreignObject elements (Lottie containers) - we draw those separately
     clone.querySelectorAll('foreignObject').forEach(fo => fo.remove());
 
-    // Set explicit dimensions + viewBox (critical for rasterization)
     clone.setAttribute('width', String(this.width));
     clone.setAttribute('height', String(this.height));
     clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
 
     let xml = new XMLSerializer().serializeToString(clone);
-    
-    // Ensure xmlns and xlink are present (required for standalone SVG rendering)
     if (!xml.includes('xmlns=')) {
       xml = xml.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
     }
@@ -293,9 +252,7 @@ export class CanvasRenderer {
       xml = xml.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
     }
 
-    // Use data URI instead of blob URL — more reliable for SVG rasterization
     const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
-
     const img = new Image();
     img.src = dataUrl;
     
@@ -307,14 +264,19 @@ export class CanvasRenderer {
     }
   }
 
-  private drawLottieCharacters(svgEl: SVGSVGElement) {
+  /**
+   * Draw Lottie characters by serializing their SVG renderer output
+   * and rasterizing each one onto the export canvas.
+   * This bypasses the hidden-canvas paint problem entirely.
+   */
+  private async drawLottieCharacters(svgEl: SVGSVGElement): Promise<void> {
     for (const inst of this.lottieInstances) {
       const gEl = svgEl.querySelector(`[data-component-id="${inst.componentId}"]`);
       if (!gEl) continue;
       const fo = gEl.querySelector('foreignObject');
       if (!fo) continue;
 
-      // Read current animated attribute values (GSAP modifies these via attr: {x: ...})
+      // Read current animated position from GSAP
       const x = parseFloat(fo.getAttribute('x') || '0');
       const y = parseFloat(fo.getAttribute('y') || '0');
       const w = parseFloat(fo.getAttribute('width') || '250');
@@ -325,17 +287,48 @@ export class CanvasRenderer {
       const facesRight = gEl.getAttribute('data-walk-faces-right') === '1';
       const needsFlip = facesRight ? flipped : !flipped;
 
-      // Check if canvas has content
-      if (!inst.canvas || inst.canvas.width === 0) continue;
+      // Grab the SVG element produced by lottie-web's SVG renderer
+      const lottieSvg = inst.container.querySelector('svg');
+      if (!lottieSvg) {
+        console.warn(`[CanvasRenderer] No SVG found in lottie container for ${inst.componentId}`);
+        continue;
+      }
 
-      if (needsFlip) {
-        this.ctx.save();
-        this.ctx.translate(x + w, y);
-        this.ctx.scale(-1, 1);
-        this.ctx.drawImage(inst.canvas, 0, 0, w, h);
-        this.ctx.restore();
-      } else {
-        this.ctx.drawImage(inst.canvas, x, y, w, h);
+      // Clone and serialize the lottie SVG
+      const svgClone = lottieSvg.cloneNode(true) as SVGSVGElement;
+      svgClone.setAttribute('width', String(w));
+      svgClone.setAttribute('height', String(h));
+      // Ensure viewBox is set for proper scaling
+      if (!svgClone.getAttribute('viewBox')) {
+        svgClone.setAttribute('viewBox', `0 0 ${lottieSvg.clientWidth || w} ${lottieSvg.clientHeight || h}`);
+      }
+
+      let svgXml = new XMLSerializer().serializeToString(svgClone);
+      if (!svgXml.includes('xmlns=')) {
+        svgXml = svgXml.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      if (!svgXml.includes('xmlns:xlink')) {
+        svgXml = svgXml.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+      }
+
+      const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXml);
+      const img = new Image();
+      img.src = dataUrl;
+
+      try {
+        await img.decode();
+
+        if (needsFlip) {
+          this.ctx.save();
+          this.ctx.translate(x + w, y);
+          this.ctx.scale(-1, 1);
+          this.ctx.drawImage(img, 0, 0, w, h);
+          this.ctx.restore();
+        } else {
+          this.ctx.drawImage(img, x, y, w, h);
+        }
+      } catch (err) {
+        console.error(`[CanvasRenderer] Lottie SVG rasterize failed for ${inst.componentId}:`, err);
       }
     }
   }
