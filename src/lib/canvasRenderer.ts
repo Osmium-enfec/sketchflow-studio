@@ -139,6 +139,12 @@ export class CanvasRenderer {
       const totalFrames = inst.anim.totalFrames || 60;
       const lottieFrame = Math.floor((elapsed * frameRate) % totalFrames);
       inst.anim.goToAndStop(lottieFrame, true);
+
+      // Grab the actual canvas lottie-web rendered to (it creates its own inside the container)
+      const lottieCanvas = inst.container.querySelector('canvas');
+      if (lottieCanvas) {
+        inst.canvas = lottieCanvas;
+      }
     }
   }
 
