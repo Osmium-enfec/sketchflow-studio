@@ -106,7 +106,11 @@ export class CanvasRenderer {
       if (!controlEl) continue;
 
       controlEl.__lottiePlay = () => {
-        self.lottiePlayStates.set(comp.id, { playing: true, startTime: self._currentTime });
+        const existing = self.lottiePlayStates.get(comp.id);
+        // Only set startTime on the first play call — not on every seek
+        if (!existing || !existing.playing) {
+          self.lottiePlayStates.set(comp.id, { playing: true, startTime: self._currentTime });
+        }
       };
       controlEl.__lottieStop = () => {
         const state = self.lottiePlayStates.get(comp.id);
