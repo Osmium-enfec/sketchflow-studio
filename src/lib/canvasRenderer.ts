@@ -64,10 +64,6 @@ export class CanvasRenderer {
       const w = comp.props.width || 250;
       const h = comp.props.height || 250;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-
       // lottie-web canvas renderer needs a DOM-attached container
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;opacity:0;';
@@ -78,14 +74,16 @@ export class CanvasRenderer {
       const anim = lottie.loadAnimation({
         container,
         renderer: 'canvas',
-        rendererSettings: {
-          context: canvas.getContext('2d')!,
-          clearCanvas: true,
-        },
         loop: true,
         autoplay: false,
         animationData: variant.data,
       });
+
+      // lottie-web creates its own canvas inside the container — we'll grab it after rendering
+      // Create a placeholder canvas for our reference
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
 
       this.lottieInstances.push({ componentId: comp.id, anim, canvas, container });
       this.lottiePlayStates.set(comp.id, { playing: false, startTime: 0 });
@@ -141,6 +139,12 @@ export class CanvasRenderer {
       const totalFrames = inst.anim.totalFrames || 60;
       const lottieFrame = Math.floor((elapsed * frameRate) % totalFrames);
       inst.anim.goToAndStop(lottieFrame, true);
+
+      // Grab the actual canvas lottie-web rendered to (it creates its own inside the container)
+      const lottieCanvas = inst.container.querySelector('canvas');
+      if (lottieCanvas) {
+        inst.canvas = lottieCanvas;
+      }
     }
   }
 
@@ -284,19 +288,19 @@ export class CanvasRenderer {
       const fo = gEl.querySelector('foreignObject');
       if (!fo) continue;
 
+      // Read current animated attribute values (GSAP modifies these via attr: {x: ...})
       const x = parseFloat(fo.getAttribute('x') || '0');
       const y = parseFloat(fo.getAttribute('y') || '0');
       const w = parseFloat(fo.getAttribute('width') || '250');
       const h = parseFloat(fo.getAttribute('height') || '250');
 
-      // Skip hidden elements
-      const opacity = (fo as SVGForeignObjectElement).style?.opacity;
-      if (opacity === '0') continue;
-
       // Handle character flip
       const flipped = gEl.getAttribute('data-walk-flipped') === '1';
       const facesRight = gEl.getAttribute('data-walk-faces-right') === '1';
       const needsFlip = facesRight ? flipped : !flipped;
+
+      // Check if canvas has content
+      if (!inst.canvas || inst.canvas.width === 0) continue;
 
       if (needsFlip) {
         this.ctx.save();
