@@ -183,7 +183,7 @@ export class CanvasRenderer {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     await this.drawSvgContent(svgEl);
-    await this.updateLottieFrames();
+    this.updateLottieFrames();
     this.drawLottieCharacters(svgEl);
   }
 
