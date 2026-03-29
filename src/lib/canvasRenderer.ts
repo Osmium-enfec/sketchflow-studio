@@ -288,19 +288,19 @@ export class CanvasRenderer {
       const fo = gEl.querySelector('foreignObject');
       if (!fo) continue;
 
+      // Read current animated attribute values (GSAP modifies these via attr: {x: ...})
       const x = parseFloat(fo.getAttribute('x') || '0');
       const y = parseFloat(fo.getAttribute('y') || '0');
       const w = parseFloat(fo.getAttribute('width') || '250');
       const h = parseFloat(fo.getAttribute('height') || '250');
 
-      // Skip hidden elements
-      const opacity = (fo as SVGForeignObjectElement).style?.opacity;
-      if (opacity === '0') continue;
-
       // Handle character flip
       const flipped = gEl.getAttribute('data-walk-flipped') === '1';
       const facesRight = gEl.getAttribute('data-walk-faces-right') === '1';
       const needsFlip = facesRight ? flipped : !flipped;
+
+      // Check if canvas has content
+      if (!inst.canvas || inst.canvas.width === 0) continue;
 
       if (needsFlip) {
         this.ctx.save();
