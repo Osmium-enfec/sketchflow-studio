@@ -83,7 +83,7 @@ export const exportMP4 = async (
 
   // 1. Setup offscreen renderer + lottie instances
   const renderer = new CanvasRenderer(canvasW, canvasH);
-  renderer.initLottieInstances(components);
+  await renderer.initLottieInstances(components);
 
   // 2. Replace DOM lottie controls with deterministic state trackers
   renderer.setupDeterministicControls(svgEl, components);
