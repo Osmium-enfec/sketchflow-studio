@@ -239,41 +239,42 @@ export class CanvasRenderer {
     }
   }
 
-  private drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
-    return new Promise((resolve) => {
-      const clone = svgEl.cloneNode(true) as SVGSVGElement;
-      
-      // Inline styles BEFORE removing foreignObjects to maintain element structure
-      this.inlineStyles(clone, svgEl);
-      
-      // Now remove foreignObject elements (Lottie containers) - we draw those separately
-      clone.querySelectorAll('foreignObject').forEach(fo => fo.remove());
+  private async drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
+    const clone = svgEl.cloneNode(true) as SVGSVGElement;
+    
+    // Inline styles BEFORE removing foreignObjects to maintain element structure
+    this.inlineStyles(clone, svgEl);
+    
+    // Now remove foreignObject elements (Lottie containers) - we draw those separately
+    clone.querySelectorAll('foreignObject').forEach(fo => fo.remove());
 
-      clone.setAttribute('width', String(this.width));
-      clone.setAttribute('height', String(this.height));
-      if (!clone.getAttribute('viewBox')) {
-        clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
-      }
-      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    // Set explicit dimensions + viewBox (critical for rasterization)
+    clone.setAttribute('width', String(this.width));
+    clone.setAttribute('height', String(this.height));
+    clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
 
-      const svgData = new XMLSerializer().serializeToString(clone);
-      const url = URL.createObjectURL(
-        new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' })
-      );
+    let xml = new XMLSerializer().serializeToString(clone);
+    
+    // Ensure xmlns and xlink are present (required for standalone SVG rendering)
+    if (!xml.includes('xmlns=')) {
+      xml = xml.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if (!xml.includes('xmlns:xlink')) {
+      xml = xml.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
 
-      const img = new Image();
-      img.onload = () => {
-        this.ctx.drawImage(img, 0, 0, this.width, this.height);
-        URL.revokeObjectURL(url);
-        resolve();
-      };
-      img.onerror = (err) => {
-        console.error('[CanvasRenderer] SVG image load failed:', err);
-        URL.revokeObjectURL(url);
-        resolve();
-      };
-      img.src = url;
-    });
+    // Use data URI instead of blob URL — more reliable for SVG rasterization
+    const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+
+    const img = new Image();
+    img.src = dataUrl;
+    
+    try {
+      await img.decode();
+      this.ctx.drawImage(img, 0, 0, this.width, this.height);
+    } catch (err) {
+      console.error('[CanvasRenderer] SVG decode/draw failed:', err);
+    }
   }
 
   private drawLottieCharacters(svgEl: SVGSVGElement) {
