@@ -158,23 +158,79 @@ export class CanvasRenderer {
   }
 
   /**
-   * Inline computed styles into SVG elements before serialization.
-   * This ensures fills, strokes, fonts, etc. survive serialization.
+   * Inline computed styles directly by matching data-component-id and element tags.
+   * This avoids index mismatch issues when foreignObjects are removed.
    */
   private inlineStyles(clone: SVGSVGElement, original: SVGSVGElement) {
-    const origElements = original.querySelectorAll('*');
-    const cloneElements = clone.querySelectorAll('*');
-
-    for (let i = 0; i < origElements.length && i < cloneElements.length; i++) {
-      const origEl = origElements[i] as Element;
-      const cloneEl = cloneElements[i] as SVGElement;
-
+    // Walk every element in original that has an inline or computed style we care about
+    const origAll = original.querySelectorAll('*');
+    
+    for (const origEl of Array.from(origAll)) {
+      // Skip foreignObject and its children — we remove those
+      if (origEl.tagName === 'foreignObject' || origEl.closest('foreignObject')) continue;
+      
       try {
         const computed = window.getComputedStyle(origEl);
+        
+        // Build a unique path to find the same element in the clone
+        const componentGroup = origEl.closest('[data-component-id]');
+        if (!componentGroup) continue;
+        
+        const compId = componentGroup.getAttribute('data-component-id');
+        const cloneGroup = clone.querySelector(`[data-component-id="${compId}"]`);
+        if (!cloneGroup) continue;
+        
+        // Find matching element within the group by class or tag position
+        let cloneEl: Element | null = null;
+        const className = origEl.getAttribute('class');
+        if (className) {
+          // Try matching by first class name for specificity
+          const firstClass = className.split(' ')[0];
+          cloneEl = cloneGroup.querySelector(`.${CSS.escape(firstClass)}`);
+        }
+        
+        if (!cloneEl) {
+          // Fallback: match by tag name + index within parent
+          const parent = origEl.parentElement;
+          if (parent) {
+            const siblings = Array.from(parent.children);
+            const idx = siblings.indexOf(origEl as HTMLElement);
+            const cloneParentCompId = parent.closest('[data-component-id]')?.getAttribute('data-component-id');
+            if (cloneParentCompId === compId && parent.tagName) {
+              // Find equivalent parent in clone
+              const origPathFromGroup = [];
+              let cur: Element | null = origEl;
+              while (cur && cur !== componentGroup) {
+                const p = cur.parentElement;
+                if (p) {
+                  const childIdx = Array.from(p.children).indexOf(cur as HTMLElement);
+                  origPathFromGroup.unshift(childIdx);
+                }
+                cur = p;
+              }
+              
+              // Navigate same path in clone
+              let cloneCur: Element | null = cloneGroup;
+              for (const childIdx of origPathFromGroup) {
+                if (cloneCur && cloneCur.children[childIdx]) {
+                  cloneCur = cloneCur.children[childIdx];
+                } else {
+                  cloneCur = null;
+                  break;
+                }
+              }
+              cloneEl = cloneCur;
+            }
+          }
+        }
+        
+        if (!cloneEl) continue;
+        
+        const svgCloneEl = cloneEl as SVGElement;
         for (const prop of INLINE_STYLE_PROPS) {
           const val = computed.getPropertyValue(prop);
           if (val && val !== 'none' && val !== 'normal' && val !== '' && val !== 'auto') {
-            cloneEl.style.setProperty(prop, val);
+            svgCloneEl.style.setProperty(prop, val);
           }
         }
       } catch {
@@ -186,7 +242,11 @@ export class CanvasRenderer {
   private drawSvgContent(svgEl: SVGSVGElement): Promise<void> {
     return new Promise((resolve) => {
       const clone = svgEl.cloneNode(true) as SVGSVGElement;
-      // Remove foreignObject elements (Lottie containers) - we draw those separately
+      
+      // Inline styles BEFORE removing foreignObjects to maintain element structure
+      this.inlineStyles(clone, svgEl);
+      
+      // Now remove foreignObject elements (Lottie containers) - we draw those separately
       clone.querySelectorAll('foreignObject').forEach(fo => fo.remove());
 
       clone.setAttribute('width', String(this.width));
@@ -195,9 +255,6 @@ export class CanvasRenderer {
         clone.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
       }
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-
-      // Inline computed styles to prevent style loss during serialization
-      this.inlineStyles(clone, svgEl);
 
       const svgData = new XMLSerializer().serializeToString(clone);
       const url = URL.createObjectURL(
@@ -210,7 +267,8 @@ export class CanvasRenderer {
         URL.revokeObjectURL(url);
         resolve();
       };
-      img.onerror = () => {
+      img.onerror = (err) => {
+        console.error('[CanvasRenderer] SVG image load failed:', err);
         URL.revokeObjectURL(url);
         resolve();
       };
