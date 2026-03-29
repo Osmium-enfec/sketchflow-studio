@@ -64,10 +64,6 @@ export class CanvasRenderer {
       const w = comp.props.width || 250;
       const h = comp.props.height || 250;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-
       // lottie-web canvas renderer needs a DOM-attached container
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;opacity:0;';
@@ -78,14 +74,16 @@ export class CanvasRenderer {
       const anim = lottie.loadAnimation({
         container,
         renderer: 'canvas',
-        rendererSettings: {
-          context: canvas.getContext('2d')!,
-          clearCanvas: true,
-        },
         loop: true,
         autoplay: false,
         animationData: variant.data,
       });
+
+      // lottie-web creates its own canvas inside the container — we'll grab it after rendering
+      // Create a placeholder canvas for our reference
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
 
       this.lottieInstances.push({ componentId: comp.id, anim, canvas, container });
       this.lottiePlayStates.set(comp.id, { playing: false, startTime: 0 });
