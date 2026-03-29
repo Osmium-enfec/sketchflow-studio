@@ -123,7 +123,7 @@ export class CanvasRenderer {
   /**
    * Update all offscreen Lottie instances to the correct frame for the current time.
    */
-  private updateLottieFrames() {
+  private async updateLottieFrames(): Promise<void> {
     for (const inst of this.lottieInstances) {
       const state = this.lottiePlayStates.get(inst.componentId);
       if (!state || !state.playing) {
@@ -139,8 +139,14 @@ export class CanvasRenderer {
       const totalFrames = inst.anim.totalFrames || 60;
       const lottieFrame = Math.floor((elapsed * frameRate) % totalFrames);
       inst.anim.goToAndStop(lottieFrame, true);
+    }
 
-      // Grab the actual canvas lottie-web rendered to (it creates its own inside the container)
+    // Wait for lottie-web to actually paint to its internal canvas
+    // goToAndStop() is async relative to paint — need double rAF
+    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+    // Now grab the rendered canvas from each container
+    for (const inst of this.lottieInstances) {
       const lottieCanvas = inst.container.querySelector('canvas');
       if (lottieCanvas) {
         inst.canvas = lottieCanvas;
@@ -157,7 +163,7 @@ export class CanvasRenderer {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     await this.drawSvgContent(svgEl);
-    this.updateLottieFrames();
+    await this.updateLottieFrames();
     this.drawLottieCharacters(svgEl);
   }
 
