@@ -55,9 +55,11 @@ export class CanvasRenderer {
   /**
    * Create offscreen lottie-web canvas renderers for each walkingCharacter.
    */
-  initLottieInstances(components: WhiteboardComponent[]) {
+  async initLottieInstances(components: WhiteboardComponent[]) {
     this.destroyLottieInstances();
     const walkingComponents = components.filter(c => c.type === 'walkingCharacter');
+
+    const initPromises: Promise<void>[] = [];
 
     for (const comp of walkingComponents) {
       const variant = getVariantData(comp.props.variant || 'femaleWalking');
@@ -65,8 +67,9 @@ export class CanvasRenderer {
       const h = comp.props.height || 250;
 
       // lottie-web canvas renderer needs a DOM-attached container
+      // Use visibility:hidden instead of opacity:0 so the browser still paints the canvas
       const container = document.createElement('div');
-      container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;opacity:0;';
+      container.style.cssText = 'position:fixed;left:-99999px;top:-99999px;pointer-events:none;visibility:hidden;';
       container.style.width = w + 'px';
       container.style.height = h + 'px';
       document.body.appendChild(container);
@@ -79,15 +82,39 @@ export class CanvasRenderer {
         animationData: variant.data,
       });
 
-      // lottie-web creates its own canvas inside the container — we'll grab it after rendering
-      // Create a placeholder canvas for our reference
+      // Placeholder until DOMLoaded fires
       const canvas = document.createElement('canvas');
       canvas.width = w;
       canvas.height = h;
 
-      this.lottieInstances.push({ componentId: comp.id, anim, canvas, container });
+      const instance: LottieInstance = { componentId: comp.id, anim, canvas, container };
+      this.lottieInstances.push(instance);
       this.lottiePlayStates.set(comp.id, { playing: false, startTime: 0 });
+
+      // Grab lottie's internal canvas once after it's created
+      initPromises.push(new Promise<void>(resolve => {
+        anim.addEventListener('DOMLoaded', () => {
+          const internalCanvas = container.querySelector('canvas');
+          if (internalCanvas) {
+            instance.canvas = internalCanvas;
+          }
+          // Render frame 0 to prime the canvas
+          anim.goToAndStop(0, true);
+          resolve();
+        });
+        // Fallback timeout in case DOMLoaded doesn't fire
+        setTimeout(() => {
+          const internalCanvas = container.querySelector('canvas');
+          if (internalCanvas) instance.canvas = internalCanvas;
+          resolve();
+        }, 500);
+      }));
     }
+
+    // Wait for all lottie instances to initialize
+    await Promise.all(initPromises);
+    // Extra buffer for canvas readiness
+    await new Promise(r => setTimeout(r, 100));
   }
 
   /**
@@ -127,7 +154,7 @@ export class CanvasRenderer {
   /**
    * Update all offscreen Lottie instances to the correct frame for the current time.
    */
-  private async updateLottieFrames(): Promise<void> {
+  private updateLottieFrames(): void {
     for (const inst of this.lottieInstances) {
       const state = this.lottiePlayStates.get(inst.componentId);
       if (!state || !state.playing) {
@@ -143,18 +170,7 @@ export class CanvasRenderer {
       const totalFrames = inst.anim.totalFrames || 60;
       const lottieFrame = Math.floor((elapsed * frameRate) % totalFrames);
       inst.anim.goToAndStop(lottieFrame, true);
-    }
-
-    // Wait for lottie-web to actually paint to its internal canvas
-    // goToAndStop() is async relative to paint — need double rAF
-    await new Promise<void>(r => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-
-    // Now grab the rendered canvas from each container
-    for (const inst of this.lottieInstances) {
-      const lottieCanvas = inst.container.querySelector('canvas');
-      if (lottieCanvas) {
-        inst.canvas = lottieCanvas;
-      }
+      // Canvas ref was grabbed once during init — no need to re-query DOM
     }
   }
 
@@ -167,7 +183,7 @@ export class CanvasRenderer {
     this.ctx.fillRect(0, 0, this.width, this.height);
 
     await this.drawSvgContent(svgEl);
-    await this.updateLottieFrames();
+    this.updateLottieFrames();
     this.drawLottieCharacters(svgEl);
   }
 
