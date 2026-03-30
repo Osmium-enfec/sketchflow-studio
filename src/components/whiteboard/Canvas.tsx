@@ -499,7 +499,14 @@ const Canvas: React.FC = () => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            onClick={(e) => { if (e.target === e.currentTarget) { selectComponent(null); if (editingId) commitEdit(); } }}
+            onClick={(e) => {
+              const target = e.target as Element;
+              const clickedOnComponent = target.closest('[data-component-id]');
+              if (!clickedOnComponent) {
+                selectComponent(null);
+                if (editingId) commitEdit();
+              }
+            }}
           >
             {preset.grid && (
               <>
