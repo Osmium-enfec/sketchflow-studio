@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { PAGE_PRESETS, PagePreset } from '@/lib/pagePresets';
 
 export type ComponentType = 'title' | 'content' | 'box' | 'arrow' | 'highlight' | 'character' | 'indianCharacter' | 'device' | 'gradientArrow' | 'curvedArrow' | 'foldedBox' | 'codeBox' | 'openPeep' | 'documentation' | 'noteBox' | 'docCodeBlock' | 'markdown' | 'walkingCharacter';
 
@@ -12,12 +13,28 @@ export interface WhiteboardComponent {
   delay: number;
 }
 
+export interface Page {
+  id: string;
+  name: string;
+  canvasType: CanvasType;
+  components: WhiteboardComponent[];
+}
+
 interface WhiteboardStore {
+  pages: Page[];
+  currentPageIndex: number;
   canvasType: CanvasType;
   components: WhiteboardComponent[];
   selectedId: string | null;
   editingId: string | null;
   isPlaying: boolean;
+
+  // Page actions
+  addPage: (name?: string) => void;
+  removePage: (index: number) => void;
+  switchPage: (index: number) => void;
+  renamePage: (index: number, name: string) => void;
+  loadPresetPages: () => void;
 
   setCanvasType: (type: CanvasType) => void;
   addComponent: (type: ComponentType, extraProps?: Record<string, any>) => void;
@@ -31,6 +48,7 @@ interface WhiteboardStore {
 }
 
 let nextId = 1;
+let nextPageId = 1;
 
 const defaultProps: Record<ComponentType, (count: number) => Record<string, any>> = {
   title: (n) => ({ text: 'Title ' + n, x: 200, y: 100 + n * 60 }),
@@ -53,12 +71,99 @@ const defaultProps: Record<ComponentType, (count: number) => Record<string, any>
   walkingCharacter: (n) => ({ x: 400 + n * 20, y: 200 + n * 20, width: 250, height: 250, flipped: false, walkDistance: 200, variant: 'femaleWalking' }),
 };
 
+function saveCurrentPage(state: WhiteboardStore): Page[] {
+  const pages = [...state.pages];
+  if (pages[state.currentPageIndex]) {
+    pages[state.currentPageIndex] = {
+      ...pages[state.currentPageIndex],
+      canvasType: state.canvasType,
+      components: state.components,
+    };
+  }
+  return pages;
+}
+
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => ({
+  pages: [{ id: 'page-0', name: 'Page 1', canvasType: 'whiteboard', components: [] }],
+  currentPageIndex: 0,
   canvasType: 'whiteboard' as CanvasType,
   components: [],
   selectedId: null,
   editingId: null,
   isPlaying: false,
+
+  addPage: (name) => {
+    const pages = saveCurrentPage(get());
+    const pageId = `page-${nextPageId++}`;
+    const newPage: Page = {
+      id: pageId,
+      name: name || `Page ${pages.length + 1}`,
+      canvasType: 'whiteboard',
+      components: [],
+    };
+    const newIndex = pages.length;
+    set({
+      pages: [...pages, newPage],
+      currentPageIndex: newIndex,
+      canvasType: 'whiteboard',
+      components: [],
+      selectedId: null,
+      editingId: null,
+    });
+  },
+
+  removePage: (index) => {
+    const s = get();
+    if (s.pages.length <= 1) return;
+    const pages = saveCurrentPage(s);
+    pages.splice(index, 1);
+    const newIndex = Math.min(s.currentPageIndex, pages.length - 1);
+    const target = pages[newIndex];
+    set({
+      pages,
+      currentPageIndex: newIndex,
+      canvasType: target.canvasType,
+      components: target.components,
+      selectedId: null,
+      editingId: null,
+    });
+  },
+
+  switchPage: (index) => {
+    const s = get();
+    if (index === s.currentPageIndex) return;
+    const pages = saveCurrentPage(s);
+    const target = pages[index];
+    if (!target) return;
+    set({
+      pages,
+      currentPageIndex: index,
+      canvasType: target.canvasType,
+      components: target.components,
+      selectedId: null,
+      editingId: null,
+    });
+  },
+
+  renamePage: (index, name) => {
+    set((s) => {
+      const pages = [...s.pages];
+      pages[index] = { ...pages[index], name };
+      return { pages };
+    });
+  },
+
+  loadPresetPages: () => {
+    const pages = saveCurrentPage(get());
+    const presetPages: Page[] = PAGE_PRESETS.map((preset, i) => ({
+      id: `preset-${nextPageId++}`,
+      name: preset.name,
+      canvasType: preset.canvasType,
+      components: preset.components,
+    }));
+    const allPages = [...pages, ...presetPages];
+    set({ pages: allPages });
+  },
 
   setCanvasType: (type) => set({ canvasType: type }),
 
